@@ -1,6 +1,0 @@
-{
-    "host": "localhost",
-    "user": "postgres",
-    "password": "pao2003",
-    "database" : "db_water"
-}
