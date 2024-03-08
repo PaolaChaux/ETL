@@ -1,7 +1,6 @@
 # ETL
-Requeriments:
-pandas.
-psycopg2
+## Requeriments:
+### pandas/ psycopg2
 json
 datetime
 powerbiclient 
