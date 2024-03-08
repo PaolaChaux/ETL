@@ -58,7 +58,13 @@
 ### Python.
 
 ## 6. Features
-### (Habla sobre las características principales, Aprovecha esta sección para contarle al público cuáles son las características más importantes del proyecto, presúmelas.)
+###  Comprehensive Data Analysis: We utilize advanced data analysis techniques to thoroughly assess water quality in Colombia, identifying significant patterns and trends.
+### Interactive Visualizations: We employ tools such as Matplotlib, Seaborn, and Power BI to create interactive visualizations that facilitate the understanding of data and highlight key findings.
+### ETL Processes: We implement Extract, Transform, and Load (ETL) processes to clean and structure data, ensuring that the information is accurate and ready for analysis.
+### Regional Insights: We provide detailed insights into water quality across different regions of Colombia, enabling authorities and the public to make informed decisions to improve water management.
+### Pollutant Identification: We identify pollutants that significantly affect the Water Quality Risk Index (IRCA) and highlight areas that require priority attention.
+### User-friendly Interface: We design an easy-to-use interface that allows users to interact with the data and explore the results of the analysis intuitively.
+### Data-Driven Decision Making: Our project facilitates data-driven decision-making, providing valuable insights for planning and implementing water quality improvement strategies.
 
 ## 7. Installation Steps
 ### 1. Clone the repository.
