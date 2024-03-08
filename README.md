@@ -12,7 +12,7 @@
 
 
 ## 1. Description Proyect Water Quality
-###
+### This project focuses on analyzing the Water Quality Index of Colombia (IRCA) data to provide insights into the state of water quality across various regions in the country. The analysis involves extracting, transforming, and loading (ETL) processes to clean and structure the data for further examination.
 
 ## 2. Quick data overview
 ### The data set that will be used for this project is based on Indicators of the Water Quality Index of Colombia (IRCA) of various pollutants. For this, we have a dataset of a total of 408,312 rows and 8,195,781 raw data identified that are divided into the following 22 columns that will be analyzed:
@@ -41,9 +41,10 @@
 
 
 ## 3. Objective
-###
+### The primary objective of this project is to assess and visualize the water quality in different regions of Colombia, identifying areas with poor water quality and potential pollutants affecting the IRCA.
 
 ## 4. Brief description of what was done
+### The project involved several stages, including data cleaning, transformation, and analysis. We employed various Python libraries and tools such as pandas, seaborn, and Power BI to manipulate the data and create visualizations that highlight key findings.
 
 ## 5. Requeriments:
 ### Pandas.
