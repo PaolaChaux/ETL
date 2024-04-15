@@ -1,40 +1,54 @@
 import pandas as pd
+import numpy as np
 import logging
 
-def replace_commas(df):
-    """ Reemplaza comas por puntos en la columna 'IrcaPromedio' y convierte a float. """
+# Función para reemplazar comas y convertir a float
+def convert_irca_columns(df):
+    """Convertir las columnas de IRCA a tipo flotante después de reemplazar las comas."""
+    df['IrcaMinimo'] = df['IrcaMinimo'].str.replace(',', '.').astype(float)
+    df['IrcaMaximo'] = df['IrcaMaximo'].str.replace(',', '.').astype(float)
     df['IrcaPromedio'] = df['IrcaPromedio'].str.replace(',', '.').astype(float)
-    logging.info("Commas replaced and converted to float in 'IrcaPromedio'")
     return df
 
+# Función para escalar columnas
+def scale_columns(df):
+    """Escalar las columnas de muestras usando MinMaxScaler."""
+    from sklearn.preprocessing import MinMaxScaler
+    scaler = MinMaxScaler()
+    columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
+    df[columns_to_scale] = scaler.fit_transform(df[columns_to_scale])
+    return df
+
+# Función para estandarizar nombres de columnas
+def standardize_column_names(df):
+    """Estandarizar los nombres de columnas a minúsculas y sin espacios."""
+    df.columns = df.columns.str.lower().str.replace(' ', '_')
+    return df
+
+# Función para clasificar IRCA
 def classify_irca(df):
-    """ Clasifica los valores en la columna 'IrcaPromedio' en categorías de riesgo. """
+    """Clasificar los valores de IRCA en categorías de riesgo."""
     def clasificar_irca(irca):
-        try:
-            if not isinstance(irca, float):  # Asegurar que irca es un float
-                irca = float(irca.replace(',', '.'))
-            if irca == 0:
-                return 'Sin información'
-            elif 0.001 <= irca <= 5:
-                return 'Sin riesgo'
-            elif 5.001 <= irca <= 14:
-                return 'Riesgo bajo'
-            elif 14.001 <= irca <= 35:
-                return 'Riesgo medio'
-            elif 35.001 <= irca <= 80:
-                return 'Riesgo alto'
-            elif 80.001 <= irca <= 100:
-                return 'Inviable sanitariamente'
-            else:
-                return 'No clasificado'
-        except ValueError:
+        if irca == 0:
+            return 'Sin información'
+        elif 0.001 <= irca <= 5:
+            return 'Sin riesgo'
+        elif 5.001 <= irca <= 14:
+            return 'Riesgo bajo'
+        elif 14.001 <= irca <= 35:
+            return 'Riesgo medio'
+        elif 35.001 <= irca <= 80:
+            return 'Riesgo alto'
+        elif 80.001 <= irca <= 100:
+            return 'Inviable sanitariamente'
+        else:
             return 'No clasificado'
     df['rango_irca'] = df['IrcaPromedio'].apply(clasificar_irca)
-    logging.info("Irca values classified")
     return df
 
+# Función para categorizar el tratamiento
 def categorize_treatment(df):
-    """ Categoriza el tratamiento de agua basado en 'MuestrasTratadas' y 'MuestrasEvaluadas'. """
+    """Categorizar el tratamiento de agua basado en muestras tratadas y evaluadas."""
     def categorize(row):
         if row['MuestrasTratadas'] == 0:
             return 'Sin tratamiento'
@@ -43,28 +57,24 @@ def categorize_treatment(df):
         else:
             return 'Tratamiento parcial'
     df['TratamientoCategoría'] = df.apply(categorize, axis=1)
-    logging.info("Treatment data categorized")
     return df
 
-def drop_unnecessary_columns(df):
-    """ Elimina columnas innecesarias del DataFrame. """
-    columns_to_drop = ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio',
-                       'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
-                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo']
-    df.drop(columns=columns_to_drop, inplace=True)
-    logging.info(f"Columns dropped: {columns_to_drop}")
+# Función para eliminar columnas no necesarias
+def drop_columns(df, columns):
+    """Eliminar columnas que no son necesarias para el análisis."""
+    df.drop(columns=columns, inplace=True)
     return df
 
-def standardize_column_names(df):
-    """ Estandariza los nombres de las columnas, reemplazando espacios por guiones bajos y convirtiendo a minúsculas. """
-    df.columns = df.columns.str.replace(' ', '_').str.lower()
-    logging.info("Column names standardized")
-    return df
-
-# Example usage within a data processing script:
-# df = pd.read_csv('path/to/data.csv')
-# df = replace_commas(df)
-# df = classify_irca(df)
-# df = categorize_treatment(df)
-# df = drop_unnecessary_columns(df)
-# df = standardize_column_names(df)
+# Ejemplo de uso en un script:
+if __name__ == "__main__":
+    # Carga de datos
+    df = pd.read_csv('path_to_your_data.csv', delimiter=';')
+    # Aplicar transformaciones
+    df = convert_irca_columns(df)
+    df = scale_columns(df)
+    df = standardize_column_names(df)
+    df = classify_irca(df)
+    df = categorize_treatment(df)
+    df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
+    # Guardar el DataFrame procesado
+    df.to_csv('processed_data.csv', index=False)
