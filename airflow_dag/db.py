@@ -109,17 +109,18 @@ def create_star_schema(config_filename, db_name):
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS dimension_parameters (
                 "ID_Parametro" SERIAL PRIMARY KEY,
-                "nombre_parametro_analisis2" VARCHAR(255) NOT NULL
+                "nombre_parametro_analisis" VARCHAR(255) NOT NULL
             );
         """)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS dimension_rango (
+            CREATE TABLE IF NOT EXISTS dimension_tratamiento (
                 "ID_Rango" SERIAL PRIMARY KEY,
                 "rango_irca" VARCHAR(255) NOT NULL
+                "tratamiento_categoría" VARCHAR(255) NOT NULL
             );
         """)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS hchos_irca_mediciones (
+            CREATE TABLE IF NOT EXISTS Fact_WaterQuality (
                 "ID_Medicion" SERIAL PRIMARY KEY,
                 "ID_Tiempo" INT NOT NULL REFERENCES dimension_date("ID_Tiempo"),
                 "ID_Ubicacion" INT NOT NULL REFERENCES dimension_ubication("ID_Ubicacion"),
@@ -129,9 +130,7 @@ def create_star_schema(config_filename, db_name):
                 "irca_maximo" FLOAT NOT NULL,
                 "irca_promedio" FLOAT NOT NULL,
                 "numero_parametros_promedio" INT NOT NULL,
-                "porcentaje_muestras_tratadas" FLOAT NOT NULL,
-                "diferencia_muestras_tratadas_sin_tratar" INT NOT NULL,
-                "rango_parametros_analizados" INT NOT NULL
+                
             );
         """)
         print("Esquema estrella creado con éxito.")
