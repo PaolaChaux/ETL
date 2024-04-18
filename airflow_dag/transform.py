@@ -76,5 +76,4 @@ if __name__ == "__main__":
     df = classify_irca(df)
     df = categorize_treatment(df)
     df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
-    # Guardar el DataFrame procesado
-    df.to_csv('processed_data.csv', index=False)
+
