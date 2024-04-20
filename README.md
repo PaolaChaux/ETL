@@ -102,10 +102,10 @@
 
 ### NOTE:
 ### For the second delivery the files to be delivered are:
-* ETL-Proyect/Main_Aqua_Quality/EDA_water_quality.ipynb
-* ETL-Proyect/airflow_dag/db.py
-* ETL-Proyect/airflow_dag/transform.py
-* ETL-Proyect/API/
+* ETL-Proyect/Main_Aqua_Quality/EDA_water_quality.ipynb -> EDA 
+* ETL-Proyect/airflow_dag/db.py                         -> Conection to BD, Create BD, Create Star Schema and load the data to BD.
+* ETL-Proyect/airflow_dag/transform.py                  -> Transformations Segunda Entrega
+* ETL-Proyect/API/                                      -> EDA API, Extract data of API and Dashboard.  
 
 
 
