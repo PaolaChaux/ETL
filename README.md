@@ -31,28 +31,28 @@
 
 ## 2. Quick data overview
 ### The data set that will be used for this project is based on Indicators of the Water Quality Index of Colombia (IRCA) of various pollutants. For this, we have a dataset of a total of 408,312 rows and 8,195,781 raw data identified that are divided into the following 22 columns that were analyzed, this dataset is the original data:
-### Año
-### Nombre del departamento
-### Código del departamento
-### Nombre del municipio
-### Código del municipio
-### IRCA mínimo
-### IRCA máximo
-### Promedio IRCA 
-### Nombre parámetros
-### Muestras evaluadas
-### Muestras tratadas
-### Muestras sin tratar
-### Número de parámetros mínimo
-### Número de parámetros máximo
-### Número de parámetros promedio
-### Número de muestras
-### Muestras no aptas
-### Porcentaje de no aptas
-### Resultado mínimo
-### Resultado máximo
-### Resultado promedio
-### Código
+* Año
+* Nombre del departamento
+* Código del departamento
+* Nombre del municipio
+* Código del municipio
+* IRCA mínimo
+* IRCA máximo
+* Promedio IRCA 
+* Nombre parámetros
+* Muestras evaluadas
+* Muestras tratadas
+* Muestras sin tratar
+* Número de parámetros mínimo
+* Número de parámetros máximo
+*  Número de parámetros promedio
+* Número de muestras
+* Muestras no aptas
+* Porcentaje de no aptas
+* Resultado mínimo
+* Resultado máximo
+* Resultado promedio
+* Código
 
 ### After the transformations the most important data we have are:
 
