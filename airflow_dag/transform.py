@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import logging
 
-# Función para reemplazar comas y convertir a float
 def convert_irca_columns(df):
     """Convertir las columnas de IRCA a tipo flotante después de reemplazar las comas."""
     df['IrcaMinimo'] = df['IrcaMinimo'].str.replace(',', '.').astype(float)
@@ -10,7 +9,6 @@ def convert_irca_columns(df):
     df['IrcaPromedio'] = df['IrcaPromedio'].str.replace(',', '.').astype(float)
     return df
 
-# Función para escalar columnas
 def scale_columns(df):
     """Escalar las columnas de muestras usando MinMaxScaler."""
     from sklearn.preprocessing import MinMaxScaler
@@ -25,7 +23,7 @@ def standardize_column_names(df):
     df.columns = df.columns.str.lower().str.replace(' ', '_')
     return df
 
-# Función para clasificar IRCA
+
 def classify_irca(df):
     """Clasificar los valores de IRCA en categorías de riesgo."""
     def clasificar_irca(irca):
@@ -46,7 +44,7 @@ def classify_irca(df):
     df['rango_irca'] = df['IrcaPromedio'].apply(clasificar_irca)
     return df
 
-# Función para categorizar el tratamiento
+
 def categorize_treatment(df):
     """Categorizar el tratamiento de agua basado en muestras tratadas y evaluadas."""
     def categorize(row):
@@ -59,21 +57,39 @@ def categorize_treatment(df):
     df['TratamientoCategoría'] = df.apply(categorize, axis=1)
     return df
 
-# Función para eliminar columnas no necesarias
+
 def drop_columns(df, columns):
     """Eliminar columnas que no son necesarias para el análisis."""
     df.drop(columns=columns, inplace=True)
     return df
 
-# Ejemplo de uso en un script:
-if __name__ == "__main__":
-    # Carga de datos
-    df = pd.read_csv('path_to_your_data.csv', delimiter=';')
-    # Aplicar transformaciones
-    df = convert_irca_columns(df)
-    df = scale_columns(df)
-    df = standardize_column_names(df)
-    df = classify_irca(df)
-    df = categorize_treatment(df)
-    df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
+
+def calculate_percentage_treated(df):
+    """Calcular el porcentaje de muestras tratadas sobre el total de muestras evaluadas."""
+    df['porcentaje_muestras_tratadas'] = (df['MuestrasTratadas'] / df['MuestrasEvaluadas']) * 100
+    df['porcentaje_muestras_tratadas'] = df['porcentaje_muestras_tratadas'].fillna(0)  # Manejo de divisiones por cero
+    return df
+
+
+def calculate_range_parameters_analyzed(df):
+    """Calcular la diferencia entre el número máximo y promedio de parámetros analizados."""
+    df['rango_parametros_analizados'] = df['NumeroParametrosMaximo'] - df['NumeroParametrosPromedio']
+    return df
+
+
+
+
+
+
+
+# if __name__ == "__main__":
+#     # Carga de datos
+#     df = pd.read_csv('path_to_your_data.csv', delimiter=';')
+#     # Aplicar transformaciones
+#     df = convert_irca_columns(df)
+#     df = scale_columns(df)
+#     df = standardize_column_names(df)
+#     df = classify_irca(df)
+#     df = categorize_treatment(df)
+#     df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
 
