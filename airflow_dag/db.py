@@ -130,6 +130,10 @@ def create_star_schema(config_filename, db_name):
                 "irca_maximo" FLOAT NOT NULL,
                 "irca_promedio" FLOAT NOT NULL,
                 "numero_parametros_promedio" INT NOT NULL,
+                "porcentaje_muestras_tratadas" INT NOT NULL,
+                "diferencia_muestras_tratadas_sin_tratar" INT NOT NULL,
+                "rango_parametros_analizados" INT NOT NULL
+                
                 
             );
         """)
