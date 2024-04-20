@@ -45,18 +45,6 @@ def classify_irca(df):
     return df
 
 
-def categorize_treatment(df):
-    """Categorizar el tratamiento de agua basado en muestras tratadas y evaluadas."""
-    def categorize(row):
-        if row['MuestrasTratadas'] == 0:
-            return 'Sin tratamiento'
-        elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
-            return 'Tratamiento completo'
-        else:
-            return 'Tratamiento parcial'
-    df['TratamientoCategoría'] = df.apply(categorize, axis=1)
-    return df
-
 
 def drop_columns(df, columns):
     """Eliminar columnas que no son necesarias para el análisis."""
@@ -90,6 +78,5 @@ def calculate_range_parameters_analyzed(df):
 #     df = scale_columns(df)
 #     df = standardize_column_names(df)
 #     df = classify_irca(df)
-#     df = categorize_treatment(df)
 #     df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
 
