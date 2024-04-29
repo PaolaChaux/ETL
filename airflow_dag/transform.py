@@ -68,3 +68,18 @@ def calculate_range_parameters_analyzed(df):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+#Profe estamos añadiendo nuevas cosas para el 3er corte 
+# tranformaciones API
+
