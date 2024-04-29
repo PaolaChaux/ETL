@@ -68,15 +68,3 @@ def calculate_range_parameters_analyzed(df):
 
 
 
-
-
-# if __name__ == "__main__":
-#     # Carga de datos
-#     df = pd.read_csv('path_to_your_data.csv', delimiter=';')
-#     # Aplicar transformaciones
-#     df = convert_irca_columns(df)
-#     df = scale_columns(df)
-#     df = standardize_column_names(df)
-#     df = classify_irca(df)
-#     df = drop_columns(df, ['ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio', 'MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar'])
-
