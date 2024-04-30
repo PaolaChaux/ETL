@@ -55,7 +55,7 @@ def drop_columns(df, columns):
 def calculate_percentage_treated(df):
     """Calcular el porcentaje de muestras tratadas sobre el total de muestras evaluadas."""
     df['porcentaje_muestras_tratadas'] = (df['MuestrasTratadas'] / df['MuestrasEvaluadas']) * 100
-    df['porcentaje_muestras_tratadas'] = df['porcentaje_muestras_tratadas'].fillna(0)  # Manejo de divisiones por cero
+    df['porcentaje_muestras_tratadas'] = df['porcentaje_muestras_tratadas'].fillna(0) 
     return df
 
 
@@ -80,6 +80,6 @@ def calculate_range_parameters_analyzed(df):
 
 
 
-#Profe estamos añadiendo nuevas cosas para el 3er corte 
+#Profe estamos a<apartir de aqui estaremos añadiendo nuevas cosas para el 3er corte 
 # tranformaciones API
 
