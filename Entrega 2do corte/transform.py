@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import logging
 
+
+
 def convert_irca_columns(df):
     """Convertir las columnas de IRCA a tipo flotante después de reemplazar las comas."""
     df['IrcaMinimo'] = df['IrcaMinimo'].str.replace(',', '.').astype(float)
@@ -80,7 +82,7 @@ def calculate_range_parameters_analyzed(df):
 
 
 
-#Profe estamos a<apartir de aqui estaremos añadiendo nuevas cosas para el 3er corte 
+#Profe, apartir de aqui estaremos añadiendo nuevas cosas para el 3er corte 
 # tranformaciones API:
 
 # def convert_dates(df):
