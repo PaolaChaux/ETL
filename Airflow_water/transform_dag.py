@@ -17,7 +17,6 @@ def scale_columns(water):
     return water
 
 
-
 def filter_top_parameters(water):
     parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
     top_15_parametros = parametros_influencia.head(15)
@@ -141,8 +140,6 @@ def apply_transformations(water):
 
 
 
-
-#Profe, apartir de aqui estaremos añadiendo nuevas cosas para el 3er corte 
 # tranformaciones API:
 
 # def convert_dates(df):
