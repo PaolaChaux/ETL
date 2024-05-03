@@ -110,7 +110,6 @@ def apply_transformations(water):
     logging.info("Scaled numerical columns.")
     
     
-    
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
     
