@@ -44,8 +44,10 @@ def classify_irca(water):
                 return 'No clasificado'
         except ValueError:
             return 'No clasificado'
-    water['rango_irca'] = water['IrcaPromedio'].apply(clasificar_irca)
+    water.loc[:, 'rango_irca'] = water['ircapromedio'].apply(clasificar_irca)
     return water
+   
+
 
 def categorize_treatment(water):
     """Categorizar el tratamiento de muestras."""
@@ -56,8 +58,9 @@ def categorize_treatment(water):
             return 'Tratamiento completo'
         else:
             return 'Tratamiento parcial'
-    water['TratamientoCategoría'] = water.apply(categorize, axis=1)
+    water.loc[:, 'TratamientoCategoría'] = water.apply(categorize, axis=1)
     return water
+    
 
 
 def calculate_critical_proportion(water, threshold=50):
