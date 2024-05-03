@@ -44,7 +44,7 @@ def classify_irca(water):
                 return 'No clasificado'
         except ValueError:
             return 'No clasificado'
-    water.loc[:, 'rango_irca'] = water['ircapromedio'].apply(clasificar_irca)
+    water.loc[:, 'rango_irca'] = water['IrcaPromedio'].apply(clasificar_irca)
     return water
    
 
