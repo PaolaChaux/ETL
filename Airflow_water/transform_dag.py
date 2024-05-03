@@ -5,12 +5,6 @@ import logging
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# def convert_irca_columns(water):
-#     water['IrcaMinimo'] = water['IrcaMinimo'].str.replace(',', '.').astype(float)
-#     water['IrcaMaximo'] = water['IrcaMaximo'].str.replace(',', '.').astype(float)
-#     water['IrcaPromedio'] = water['IrcaPromedio'].str.replace(',', '.').astype(float)
-#     return water
-
 def standardize_place_names(water):
     water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
     water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
@@ -94,8 +88,6 @@ def drop_unnecessary_columns(water):
 
 def apply_transformations(water):
     logging.info("Starting transformations on water data.")
-    # water = convert_irca_columns(water)
-    # logging.info("Converted IRCA columns to float.")
     
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
