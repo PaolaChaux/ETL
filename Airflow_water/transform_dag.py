@@ -16,10 +16,7 @@ def scale_columns(water):
     water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
     return water
 
-def standardize_column_names(water):
-    water.columns = water.columns.str.lower().str.replace(' ', '_')
-    logging.info("Column names standardized")
-    return water
+
 
 def filter_top_parameters(water):
     parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
@@ -86,6 +83,17 @@ def drop_unnecessary_columns(water):
 
 
 
+def standardize_column_names(water):
+    water.columns = water.columns.str.lower().str.replace(' ', '_')
+    logging.info("Column names standardized")
+    return water
+
+
+
+
+
+
+
 def apply_transformations(water):
     logging.info("Starting transformations on water data.")
     
@@ -94,9 +102,6 @@ def apply_transformations(water):
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
-    
-    water = standardize_column_names(water)
-    logging.info("Standardized column names.")
     
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
@@ -112,6 +117,9 @@ def apply_transformations(water):
     
     water = drop_unnecessary_columns(water)
     logging.info("Dropped unnecessary columns.")
+    
+    water = standardize_column_names(water)
+    logging.info("Standardized column names.")
     
     logging.info("All transformations applied successfully.")
     return water
