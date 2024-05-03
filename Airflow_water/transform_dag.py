@@ -63,13 +63,13 @@ def categorize_treatment(water):
 def calculate_critical_proportion(water, threshold=50):
     """Calcular la proporción crítica de IRCA que supera un umbral especificado."""
     def proportion(row):
-        if row['ircamaximo'] == row['ircaminimo']:
+        if row['IrcaMaximo'] == row['IrcaMinimo']:
             return 0
         else:
-            lower_bound = max(threshold, row['ircaminimo'])
-            if lower_bound > row['ircamaximo']:
+            lower_bound = max(threshold, row['IrcaMinimo'])
+            if lower_bound > row['IrcaMaximo']:
                 return 0
-            return (row['ircamaximo'] - lower_bound) / (row['ircamaximo'] - row['ircaminimo'])
+            return (row['IrcaMaximo'] - lower_bound) / (row['IrcaMaximo'] - row['ircaMinimo'])
 
     water['Proporción Crítica'] = water.apply(proportion, axis=1)
     return water
