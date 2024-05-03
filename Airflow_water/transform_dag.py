@@ -75,7 +75,7 @@ def calculate_critical_proportion(water, threshold=50):
             lower_bound = max(threshold, row['IrcaMinimo'])
             if lower_bound > row['IrcaMaximo']:
                 return 0
-            return (row['IrcaMaximo'] - lower_bound) / (row['IrcaMaximo'] - row['ircaMinimo'])
+            return (row['IrcaMaximo'] - lower_bound) / (row['IrcaMaximo'] - row['IrcaMinimo'])
 
     water['Proporción Crítica'] = water.apply(proportion, axis=1)
     return water
