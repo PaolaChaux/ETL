@@ -18,9 +18,13 @@ def scale_columns(water):
 
 
 def filter_top_parameters(water):
-    parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
+    parametros_influencia = water.groupby('nombreparametroanalisis2')['ircapromedio'].mean().sort_values(ascending=False)
     top_15_parametros = parametros_influencia.head(15)
-    return water[water['NombreParametroAnalisis2'].isin(top_15_parametros.index)]
+    water['is_top_15'] = water['nombreparametroanalisis2'].isin(top_15_parametros.index)
+    return water
+
+
+
 
 def classify_irca(water):
     def clasificar_irca(irca):
@@ -104,6 +108,8 @@ def apply_transformations(water):
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
+    
+    
     
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
