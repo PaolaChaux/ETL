@@ -1,74 +1,117 @@
 import pandas as pd
-import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 import logging
 
+# Configuración de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-def convert_irca_columns(df):
+def convert_irca_columns(water):
     """Convertir las columnas de IRCA a tipo flotante después de reemplazar las comas."""
-    df['IrcaMinimo'] = df['IrcaMinimo'].str.replace(',', '.').astype(float)
-    df['IrcaMaximo'] = df['IrcaMaximo'].str.replace(',', '.').astype(float)
-    df['IrcaPromedio'] = df['IrcaPromedio'].str.replace(',', '.').astype(float)
-    return df
+    water['IrcaMinimo'] = water['IrcaMinimo'].str.replace(',', '.').astype(float)
+    water['IrcaMaximo'] = water['IrcaMaximo'].str.replace(',', '.').astype(float)
+    water['IrcaPromedio'] = water['IrcaPromedio'].str.replace(',', '.').astype(float)
+    return water
 
-def scale_columns(df):
+def standardize_place_names(water):
+    """Estandarizar los nombres de departamentos y municipios."""
+    water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
+    water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
+    return water
+
+def scale_columns(water):
     """Escalar las columnas de muestras usando MinMaxScaler."""
-    from sklearn.preprocessing import MinMaxScaler
     scaler = MinMaxScaler()
     columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
-    df[columns_to_scale] = scaler.fit_transform(df[columns_to_scale])
-    return df
+    water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
+    return water
 
-# Función para estandarizar nombres de columnas
-def standardize_column_names(df):
+def standardize_column_names(water):
     """Estandarizar los nombres de columnas a minúsculas y sin espacios."""
-    df.columns = df.columns.str.lower().str.replace(' ', '_')
-    return df
+    water.columns = water.columns.str.lower().str.replace(' ', '_')
+    logging.info("Column names standardized")
+    return water
 
+def filter_top_parameters(water):
+    """Filtrar los datos para incluir solo los 15 parámetros más influyentes en el IRCA promedio."""
+    parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
+    top_15_parametros = parametros_influencia.head(15)
+    return water[water['NombreParametroAnalisis2'].isin(top_15_parametros.index)]
 
-def classify_irca(df):
+def classify_irca(water):
     """Clasificar los valores de IRCA en categorías de riesgo."""
     def clasificar_irca(irca):
-        if irca == 0:
-            return 'Sin información'
-        elif 0.001 <= irca <= 5:
-            return 'Sin riesgo'
-        elif 5.001 <= irca <= 14:
-            return 'Riesgo bajo'
-        elif 14.001 <= irca <= 35:
-            return 'Riesgo medio'
-        elif 35.001 <= irca <= 80:
-            return 'Riesgo alto'
-        elif 80.001 <= irca <= 100:
-            return 'Inviable sanitariamente'
-        else:
+        try:
+            if isinstance(irca, str):
+                irca = float(irca.replace(',', '.'))
+            if irca == 0:
+                return 'Sin información'
+            elif irca < 5:
+                return 'Sin riesgo'
+            elif irca < 14:
+                return 'Riesgo bajo'
+            elif irca < 35:
+                return 'Riesgo medio'
+            elif irca < 80:
+                return 'Riesgo alto'
+            elif irca <= 100:
+                return 'Riesgo inviable sanitariamente'
+            else:
+                return 'No clasificado'
+        except ValueError:
             return 'No clasificado'
-    df['rango_irca'] = df['IrcaPromedio'].apply(clasificar_irca)
-    return df
+    water['rango_irca'] = water['IrcaPromedio'].apply(clasificar_irca)
+    return water
 
+def categorize_treatment(water):
+    """Categorizar el tratamiento de muestras."""
+    def categorize(row):
+        if row['MuestrasTratadas'] == 0:
+            return 'Sin tratamiento'
+        elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
+            return 'Tratamiento completo'
+        else:
+            return 'Tratamiento parcial'
+    water['TratamientoCategoría'] = water.apply(categorize, axis=1)
+    return water
 
-
-def drop_columns(df, columns):
+def drop_unnecessary_columns(water):
     """Eliminar columnas que no son necesarias para el análisis."""
-    df.drop(columns=columns, inplace=True)
-    return df
+    columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
+                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
+    return water.drop(columns=columns_to_drop)
 
+def apply_transformations(water):
+    """Aplicar todas las transformaciones en el orden correcto."""
+    logging.info("Starting transformations on water data.")
+    water = convert_irca_columns(water)
+    logging.info("Converted IRCA columns to float.")
+    
+    water = standardize_place_names(water)
+    logging.info("Standardized place names.")
+    
+    water = scale_columns(water)
+    logging.info("Scaled numerical columns.")
+    
+    water = standardize_column_names(water)
+    logging.info("Standardized column names.")
+    
+    water = filter_top_parameters(water)
+    logging.info("Filtered top influential parameters.")
+    
+    water = classify_irca(water)
+    logging.info("Classified IRCA values into categories.")
+    
+    water = categorize_treatment(water)
+    logging.info("Categorized treatment data.")
+    
+    water = drop_unnecessary_columns(water)
+    logging.info("Dropped unnecessary columns.")
+    
+    logging.info("All transformations applied successfully.")
+    return water
 
-def calculate_percentage_treated(df):
-    """Calcular el porcentaje de muestras tratadas sobre el total de muestras evaluadas."""
-    df['porcentaje_muestras_tratadas'] = (df['MuestrasTratadas'] / df['MuestrasEvaluadas']) * 100
-    df['porcentaje_muestras_tratadas'] = df['porcentaje_muestras_tratadas'].fillna(0) 
-    return df
-
-
-def calculate_range_parameters_analyzed(df):
-    """Calcular la diferencia entre el número máximo y promedio de parámetros analizados."""
-    df['rango_parametros_analizados'] = df['NumeroParametrosMaximo'] - df['NumeroParametrosPromedio']
-    return df
-
-
-
-
+        
+    
 
 
 
