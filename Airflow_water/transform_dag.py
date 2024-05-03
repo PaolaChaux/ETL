@@ -98,8 +98,6 @@ def standardize_column_names(water):
 
 
 
-
-
 def apply_transformations(water):
     logging.info("Starting transformations on water data.")
     
@@ -147,21 +145,21 @@ def apply_transformations(water):
 
 # tranformaciones API:
 
-def convert_dates(df):
-    df['fecha_terminacion_proyecto'] = pd.to_datetime(df['fecha_terminacion_proyecto'])
-    df['fecha_de_corte'] = pd.to_datetime(df['fecha_de_corte'])
-    return df
+def convert_dates(api):
+    api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
+    api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
+    return api
 
-def normalize_text_columns(df):
-    str_cols = df.select_dtypes(include=['object']).columns
-    df[str_cols] = df[str_cols].apply(lambda x: x.str.lower().str.strip())
-    return df
+def normalize_text_columns(api):
+    str_cols = api.select_dtypes(include=['object']).columns
+    api[str_cols] = api[str_cols].apply(lambda x: x.str.lower().str.strip())
+    return api
 
-def compute_num_municipios(df):
-    df['num_municipios'] = df['c_digo_divipola_municipio'].apply(lambda x: len(x.split(',')))
-    return df
+def compute_num_municipios(api):
+    api['num_municipios'] = api['c_digo_divipola_municipio'].apply(lambda x: len(x.split(',')))
+    return api
 
-def map_regions(df):
+def map_regions(api):
     region_mapping = {
         'CHOCO': 'Región Pacífica', 'CAUCA': 'Región Pacífica', 'NARIÑO': 'Región Pacífica', 'VALLE DEL CAUCA': 'Región Pacífica',
         'ARAUCA': 'Región Orinoquía', 'CASANARE': 'Región Orinoquía', 'GUAINÍA': 'Región Orinoquía', 'GUAVIARE': 'Región Orinoquía', 'META': 'Región Orinoquía', 'VICHADA': 'Región Orinoquía',
@@ -169,32 +167,52 @@ def map_regions(df):
         'ANTIOQUIA': 'Región Andina', 'BOYACA': 'Región Andina', 'CALDAS': 'Región Andina', 'CUNDINAMARCA': 'Región Andina', 'HUILA': 'Región Andina', 'NORTE DE SANTANDER': 'Región Andina', 'QUINDIO': 'Región Andina', 'RISARALDA': 'Región Andina', 'SANTANDER': 'Región Andina', 'TOLIMA': 'Región Andina',
         'SAN ANDRES Y PROVIDENCIA': 'Región Insular', 'ATLANTICO': 'Región Caribe', 'BOLIVAR': 'Región Caribe', 'CESAR': 'Región Caribe', 'CORDOBA': 'Región Caribe', 'LA GUAJIRA': 'Región Caribe', 'MAGDALENA': 'Región Caribe', 'SUCRE': 'Región Caribe'
     }
-    df['departamento'] = df['departamento'].replace({
+    api['departamento'] = api['departamento'].replace({
         'SAN ANDRES': 'SAN ANDRES Y PROVIDENCIA',
         'N DE SANTANDER': 'NORTE DE SANTANDER'
     }).str.upper()
-    df['región'] = df['departamento'].map(region_mapping).fillna('Región Desconocida')
-    return df
+    api['región'] = api['departamento'].map(region_mapping).fillna('Región Desconocida')
+    return api
 
-def calculate_financing(df):
-    df['total_financiamiento'] = df['aporte_nacion'] + df['contrapartida']
-    return df
+def calculate_financing(api):
+    api['total_financiamiento'] = api['aporte_nacion'] + api['contrapartida']
+    return api
 
-def calculate_project_duration(df):
-    df['duracion_proyecto_dias'] = (df['fecha_de_corte'] - df['fecha_terminacion_proyecto']).dt.days
-    return df
+def calculate_project_duration(api):
+    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_terminacion_proyecto']).dt.days
+    return api
 
-def drop_unnecessary_columns(df):
-    df.drop(['fecha_de_corte', 'fecha_terminacion_proyecto', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
-    return df
+def drop_unnecessary_columns(api):
+    api.drop(['fecha_de_corte', 'fecha_terminacion_proyecto', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
+    return api
 
-def transformations_api_data(df):
-    df = convert_dates(df)
-    df = normalize_text_columns(df)
-    df = compute_num_municipios(df)
-    df = map_regions(df)
-    df = calculate_financing(df)
-    df = calculate_project_duration(df)
-    df = drop_unnecessary_columns(df)
-    return df
+
+import logging
+
+def transformations_api_data(api):
+    logging.info("Starting transformations on API data.")
+    
+    api = convert_dates(api)
+    logging.info("Dates converted successfully.")
+
+    api = normalize_text_columns(api)
+    logging.info("Text columns normalized successfully.")
+    
+    api = compute_num_municipios(api)
+    logging.info("Number of municipalities computed successfully.")
+    
+    api = map_regions(api)
+    logging.info("Regions mapped successfully.")
+    
+    api = calculate_financing(api)
+    logging.info("Project financing calculated successfully.")
+    
+    api = calculate_project_duration(api)
+    logging.info("Project duration calculated successfully.")
+    
+    api = drop_unnecessary_columns(api)
+    logging.info("Unnecessary columns dropped successfully.")
+    
+    logging.info("All transformations applied successfully.")
+    return api
 
