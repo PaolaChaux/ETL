@@ -187,8 +187,6 @@ def drop_unnecessary_columns(api):
     return api
 
 
-import logging
-
 def transformations_api_data(api):
     logging.info("Starting transformations on API data.")
     
