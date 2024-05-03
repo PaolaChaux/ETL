@@ -6,39 +6,33 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def convert_irca_columns(water):
-    """Convertir las columnas de IRCA a tipo flotante después de reemplazar las comas."""
     water['IrcaMinimo'] = water['IrcaMinimo'].str.replace(',', '.').astype(float)
     water['IrcaMaximo'] = water['IrcaMaximo'].str.replace(',', '.').astype(float)
     water['IrcaPromedio'] = water['IrcaPromedio'].str.replace(',', '.').astype(float)
     return water
 
 def standardize_place_names(water):
-    """Estandarizar los nombres de departamentos y municipios."""
     water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
     water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
     return water
 
 def scale_columns(water):
-    """Escalar las columnas de muestras usando MinMaxScaler."""
     scaler = MinMaxScaler()
     columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
     water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
     return water
 
 def standardize_column_names(water):
-    """Estandarizar los nombres de columnas a minúsculas y sin espacios."""
     water.columns = water.columns.str.lower().str.replace(' ', '_')
     logging.info("Column names standardized")
     return water
 
 def filter_top_parameters(water):
-    """Filtrar los datos para incluir solo los 15 parámetros más influyentes en el IRCA promedio."""
     parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
     top_15_parametros = parametros_influencia.head(15)
     return water[water['NombreParametroAnalisis2'].isin(top_15_parametros.index)]
 
 def classify_irca(water):
-    """Clasificar los valores de IRCA en categorías de riesgo."""
     def clasificar_irca(irca):
         try:
             if isinstance(irca, str):
@@ -74,14 +68,31 @@ def categorize_treatment(water):
     water['TratamientoCategoría'] = water.apply(categorize, axis=1)
     return water
 
+
+def calculate_critical_proportion(water, threshold=50):
+    """Calcular la proporción crítica de IRCA que supera un umbral especificado."""
+    def proportion(row):
+        if row['ircamaximo'] == row['ircaminimo']:
+            return 0
+        else:
+            lower_bound = max(threshold, row['ircaminimo'])
+            if lower_bound > row['ircamaximo']:
+                return 0
+            return (row['ircamaximo'] - lower_bound) / (row['ircamaximo'] - row['ircaminimo'])
+
+    water['Proporción Crítica'] = water.apply(proportion, axis=1)
+    return water
+
+
 def drop_unnecessary_columns(water):
     """Eliminar columnas que no son necesarias para el análisis."""
     columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
     return water.drop(columns=columns_to_drop)
 
+
+
 def apply_transformations(water):
-    """Aplicar todas las transformaciones en el orden correcto."""
     logging.info("Starting transformations on water data.")
     water = convert_irca_columns(water)
     logging.info("Converted IRCA columns to float.")
@@ -103,6 +114,9 @@ def apply_transformations(water):
     
     water = categorize_treatment(water)
     logging.info("Categorized treatment data.")
+    
+    water = calculate_critical_proportion(water)
+    logging.info("Critical Proportion.")
     
     water = drop_unnecessary_columns(water)
     logging.info("Dropped unnecessary columns.")
