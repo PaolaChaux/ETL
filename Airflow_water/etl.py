@@ -22,31 +22,54 @@ def read_water():
 
     
 
+
 def transform_water(**kwargs):
-    
     ti = kwargs['ti']
-    json_data = json.loads(ti.xcom_pull(task_ids='read_db'))
+    json_data = json.loads(ti.xcom_pull(task_ids='read_water'))
     water = pd.json_normalize(data=json_data)
     
-    water = transformations_water(water)
+    water = transformations_water(water) 
 
-    logging.info(f"Los datos transformados son: {water}")
+    logging.info(f"Datos transformados: {water}")  
+    # {water.head()}") 
+
+    return water.to_json(orient='records')  
+
+
+
+
+def extract_api(endpoint, **kwargs):
+    try:
     
-    return water.to_json(orient='records')
+        client = Socrata("www.datos.gov.co", None)
+
+        results = client.get(endpoint, limit=2000)
+
+        api_data = pd.DataFrame.from_records(results)
+
+        return api_data
+    except Exception as e:
+        logging.error(f"Se produjo un error: {e}")
+        return pd.DataFrame() 
 
 
 
 
-def extract_api():
+def extract_api(endpoint, **kwargs):
+    try:
+        client = Socrata("www.datos.gov.co", None)
 
-    with open('db_config.json') as file:
-        db_config = json.load(file)
+        results = client.get(endpoint, limit=2000)
 
-    engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
+        api_data = pd.DataFrame.from_records(results)
+
+        return api_data.to_json(orient='records')
     
-    api = pd.read_sql('SELECT * FROM the_grammy_awards', engine)
-    
-    return api.to_json(orient='records')
+    except Exception as e:
+        logging.error(f"Se produjo un error: {e}")
+        return "[]"
+
+
 
 
 
