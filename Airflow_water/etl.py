@@ -9,80 +9,50 @@ from transform_dag import transformations_api
 from transform_dag import transformations_water
 
 
-
 def read_water():
     with open('db_config.json') as file:
         db_config = json.load(file)
 
     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5432/{db_config["dbname"]}')
-
+    
     water = pd.read_sql('SELECT * FROM water_table', engine)
     
     return water.to_json(orient='records')
-
-    
-
 
 def transform_water(**kwargs):
     ti = kwargs['ti']
     json_data = json.loads(ti.xcom_pull(task_ids='read_water'))
     water = pd.json_normalize(data=json_data)
+
+    water = transformations_water(water)
     
-    water = transformations_water(water) 
-
-    logging.info(f"Datos transformados: {water}")  
-    # {water.head()}") 
-
-    return water.to_json(orient='records')  
-
-
-
-
-def extract_api(endpoint, **kwargs):
-    try:
+    logging.info("Datos transformados de agua: %s", water.to_string())  # Limitar la cantidad de datos logueados si es necesario
     
-        client = Socrata("www.datos.gov.co", None)
-
-        results = client.get(endpoint, limit=2000)
-
-        api_data = pd.DataFrame.from_records(results)
-
-        return api_data
-    except Exception as e:
-        logging.error(f"Se produjo un error: {e}")
-        return pd.DataFrame() 
-
-
-
+    return water.to_json(orient='records')
 
 def extract_api(endpoint, **kwargs):
     try:
         client = Socrata("www.datos.gov.co", None)
-
         results = client.get(endpoint, limit=2000)
-
         api_data = pd.DataFrame.from_records(results)
-
         return api_data.to_json(orient='records')
-    
     except Exception as e:
-        logging.error(f"Se produjo un error: {e}")
+        logging.error("Se produjo un error: %s", e)
         return "[]"
-
-
-
 
 
 def transform_api(**kwargs):
     ti = kwargs['ti']
-    json_data = json.loads(ti.xcom_pull(task_ids='read_water'))
-    api = pd.json_normalize(data=json_data)
-  
-    api = transformations_api(api)
-
-    logging.info(f"Los datos transformados de Spotify son: {api}")
     
-    return api.to_json(orient='records')
+    json_data = ti.xcom_pull(task_ids='extract_api') 
+    
+    api = pd.read_json(json_data, orient='records')
+    
+    api_transformed = transformations_api(api)
+    
+    logging.info("Datos transformados de API: %s", api_transformed.to_string())
+    
+    return api_transformed.to_json(orient='records')
 
 
 
