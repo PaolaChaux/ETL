@@ -5,8 +5,8 @@ import logging
 from sqlalchemy import create_engine
 import psycopg2
 from sodapy import Socrata
-from transform_dag import transformations_api_data
-from transform_dag import apply_transformations
+from transform_dag import transformations_api
+from transform_dag import transformations_water
 
 
 
@@ -18,20 +18,21 @@ def read_water():
 
     water = pd.read_sql('SELECT * FROM water_table', engine)
     
-    return water
-    
+    return water.to_json(orient='records')
 
+    
 
 def transform_water(**kwargs):
-    ti = kwargs['ti']
-    json_data = json.loads(ti.xcom_pull(task_ids='read_water'))
-    spotify_df = pd.json_normalize(data=json_data)
-  
-    spotify_df = transform_spotify(spotify_df)
-
-    logging.info(f"Los datos transformados de Spotify son: {spotify_df}")
     
-    return spotify_df.to_json(orient='records')
+    ti = kwargs['ti']
+    json_data = json.loads(ti.xcom_pull(task_ids='read_db'))
+    water = pd.json_normalize(data=json_data)
+    
+    water = transformations_water(water)
+
+    logging.info(f"Los datos transformados son: {water}")
+    
+    return water.to_json(orient='records')
 
 
 
@@ -43,23 +44,24 @@ def extract_api():
 
     engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
     
-    grammy_df = pd.read_sql('SELECT * FROM the_grammy_awards', engine)
+    api = pd.read_sql('SELECT * FROM the_grammy_awards', engine)
     
-    return grammy_df.to_json(orient='records')
-
+    return api.to_json(orient='records')
 
 
 
 def transform_api(**kwargs):
     ti = kwargs['ti']
-    json_data = json.loads(ti.xcom_pull(task_ids='read_db'))
-    grammy_df = pd.json_normalize(data=json_data)
-    
-    grammy_df = transform_grammy(grammy_df)
+    json_data = json.loads(ti.xcom_pull(task_ids='read_water'))
+    api = pd.json_normalize(data=json_data)
+  
+    api = transformations_api(api)
 
-    logging.info(f"Los datos transformados son: {grammy_df}")
+    logging.info(f"Los datos transformados de Spotify son: {api}")
     
-    return grammy_df.to_json(orient='records')
+    return api.to_json(orient='records')
+
+
 
 
 

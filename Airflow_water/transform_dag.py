@@ -98,7 +98,7 @@ def standardize_column_names(water):
 
 
 
-def apply_transformations(water):
+def transformations_water(water):
     logging.info("Starting transformations on water data.")
     
     water = standardize_place_names(water)
@@ -187,7 +187,7 @@ def drop_unnecessary_columns(api):
     return api
 
 
-def transformations_api_data(api):
+def transformations_api(api):
     logging.info("Starting transformations on API data.")
     
     api = convert_dates(api)
