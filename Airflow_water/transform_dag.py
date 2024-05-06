@@ -81,7 +81,7 @@ def calculate_critical_proportion(water, threshold=50):
     return water
 
 
-def drop_unnecessary_columns(water):
+def drop_unnecessary_columns_water(water):
     """Eliminar columnas que no son necesarias para el análisis."""
     columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
@@ -120,7 +120,7 @@ def transformations_water(water):
     water = calculate_critical_proportion(water)
     logging.info("Critical Proportion.")
     
-    water = drop_unnecessary_columns(water)
+    water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
     
     water = standardize_column_names(water)
