@@ -1,9 +1,24 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import logging
+import re
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def water_municipality_names(water):
+    def clean_names(municipality_string):
+        # Eliminar códigos entre paréntesis y dividir por comas
+        cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
+        return [muni.strip().title() for muni in cleaned_list if muni.strip()]
+
+    water['NombreMunicipio'] = water['NombreMunicipio'].apply(clean_names).explode()
+    return water
+
+def dates_water(water):
+    water['Año'] = pd.to_datetime(water['Año'])
+    return water
 
 def standardize_place_names(water):
     water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
@@ -22,7 +37,6 @@ def filter_top_parameters(water):
     top_15_parametros = parametros_influencia.head(15)
     water['is_top_15'] = water['NombreParametroAnalisis2'].isin(top_15_parametros.index)
     return water
-
 
 
 
@@ -101,12 +115,17 @@ def standardize_column_names(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
     
+    water = water_municipality_names(water)
+    logging.info("Clean Municupality names successfully.")
+    
+    water = dates_water(water)
+    logging.info("Dates converted successfully.")
+    
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
-    
     
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
@@ -137,15 +156,19 @@ def transformations_water(water):
 
 
 
-
-
-
-
-
-
 # tranformaciones API:
 
-def convert_dates(api):
+
+def api_municipality_names(api):
+    def clean_names(municipality_string):
+        cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
+        return [muni.strip().title() for muni in cleaned_list if muni.strip()]
+
+    api['municipio'] = api['municipio'].apply(clean_names).explode()
+    return api
+
+
+def dates_api(api):
     api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
     api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
     return api
@@ -183,14 +206,17 @@ def calculate_project_duration(api):
     return api
 
 def drop_unnecessary_columns(api):
-    api.drop(['fecha_de_corte', 'fecha_terminacion_proyecto', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
+    api.drop(['fecha_de_corte', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
     return api
 
 
 def transformations_api(api):
     logging.info("Starting transformations on API data.")
     
-    api = convert_dates(api)
+    api = api_municipality_names(api)
+    logging.info("Clean Municupality names successfully.")
+    
+    api = dates_api(api)
     logging.info("Dates converted successfully.")
 
     api = normalize_text_columns(api)
