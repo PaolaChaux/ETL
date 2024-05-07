@@ -159,18 +159,18 @@ def transformations_water(water):
 # tranformaciones API:
 
 
-def api_municipality_names(api):
-    """Limpia los nombres de municipios directamente en la columna especificada de un DataFrame."""
-    def clean_names(municipality_string):
-        # Elimina los códigos entre paréntesis y divide por comas
-        cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
-        # Elimina espacios extras y capitaliza cada nombre de municipio
-        return [muni.strip().title() for muni in cleaned_list if muni.strip()]
+# def api_municipality_names(api):
+#     """Limpia los nombres de municipios directamente en la columna especificada de un DataFrame."""
+#     def clean_names(municipality_string):
+#         # Elimina los códigos entre paréntesis y divide por comas
+#         cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
+#         # Elimina espacios extras y capitaliza cada nombre de municipio
+#         return [muni.strip().title() for muni in cleaned_list if muni.strip()]
 
-    # Aplicar la función de limpieza y explotar los resultados en filas separadas
-    api['municipio'] = api['municipio'].apply(clean_names)
-    api = api.explode('municipio').reset_index(drop=True)
-    return api
+#     # Aplicar la función de limpieza y explotar los resultados en filas separadas
+#     api['municipio'] = api['municipio'].apply(clean_names)
+#     api = api.explode('municipio').reset_index(drop=True)
+#     return api
 
 
 
@@ -219,8 +219,8 @@ def drop_unnecessary_columns(api):
 def transformations_api(api):
     logging.info("Starting transformations on API data.")
     
-    api = api_municipality_names(api)
-    logging.info("Clean Municupality names successfully.")
+    # api = api_municipality_names(api)
+    # logging.info("Clean Municupality names successfully.")
     
     api = dates_api(api)
     logging.info("Dates converted successfully.")
