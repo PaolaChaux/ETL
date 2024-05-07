@@ -7,14 +7,14 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def water_municipality_names(water):
-    def clean_names(municipality_string):
-        # Eliminar códigos entre paréntesis y dividir por comas
-        cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
-        return [muni.strip().title() for muni in cleaned_list if muni.strip()]
+# def water_municipality_names(water):
+#     def clean_names(municipality_string):
+#         # Eliminar códigos entre paréntesis y dividir por comas
+#         cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
+#         return [muni.strip().title() for muni in cleaned_list if muni.strip()]
 
-    water['NombreMunicipio'] = water['NombreMunicipio'].apply(clean_names).explode()
-    return water
+#     water['NombreMunicipio'] = water['NombreMunicipio'].apply(clean_names).explode()
+#     return water
 
 def dates_water(water):
     water['Año'] = pd.to_datetime(water['Año'])
@@ -115,8 +115,8 @@ def standardize_column_names(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
     
-    water = water_municipality_names(water)
-    logging.info("Clean Municupality names successfully.")
+    # water = water_municipality_names(water)
+    # logging.info("Clean Municupality names successfully.")
     
     water = dates_water(water)
     logging.info("Dates converted successfully.")
@@ -160,12 +160,18 @@ def transformations_water(water):
 
 
 def api_municipality_names(api):
+    """Limpia los nombres de municipios directamente en la columna especificada de un DataFrame."""
     def clean_names(municipality_string):
+        # Elimina los códigos entre paréntesis y divide por comas
         cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
+        # Elimina espacios extras y capitaliza cada nombre de municipio
         return [muni.strip().title() for muni in cleaned_list if muni.strip()]
 
-    api['municipio'] = api['municipio'].apply(clean_names).explode()
+    # Aplicar la función de limpieza y explotar los resultados en filas separadas
+    api['municipio'] = api['municipio'].apply(clean_names)
+    api = api.explode('municipio').reset_index(drop=True)
     return api
+
 
 
 def dates_api(api):
