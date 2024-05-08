@@ -7,3 +7,4 @@ seaborn===0.13.2
 sodapy===2.2.0
 SQLAlchemy===2.0.27
 scikit-learn===1.4.2
+pandas===1.5.3
