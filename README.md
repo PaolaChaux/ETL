@@ -111,13 +111,6 @@ To establish the connection to the database in postgres, it´s necessary to have
 Also, in this repository the Power BI Client tool was used to give us a report and we edit it to our liking.
 Don't forget to set the environment as kernel before you run the notebook.
 
-### NOTE:
-### For the second version project, the files are:
-* ETL-Proyect/Main_Aqua_Quality/EDA_water_quality.ipynb..-> EDA 
-* ETL-Proyect/airflow_dag/db.py..........................-> Conection to BD, Create BD, Create Star Schema and load the data to BD.
-* ETL-Proyect/airflow_dag/transform.py...................-> Transformations Segunda Entrega.
-* ETL-Proyect/API/.......................................-> EDA API, Extract data of API and Dashboard API.
-* ETL-Proyect/airflow_dag/Proyecto ETL - 2 Entrega.pdf...-> Dashboard general proyect.
 
 
 
