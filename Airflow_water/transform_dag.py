@@ -7,14 +7,6 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-# def water_municipality_names(water):
-#     def clean_names(municipality_string):
-#         # Eliminar códigos entre paréntesis y dividir por comas
-#         cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
-#         return [muni.strip().title() for muni in cleaned_list if muni.strip()]
-
-#     water['NombreMunicipio'] = water['NombreMunicipio'].apply(clean_names).explode()
-#     return water
 
 def dates_water(water):
     water['Año'] = pd.to_datetime(water['Año'])
@@ -34,8 +26,8 @@ def scale_columns(water):
 
 def filter_top_parameters(water):
     parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
-    top_15_parametros = parametros_influencia.head(15)
-    water['is_top_15'] = water['NombreParametroAnalisis2'].isin(top_15_parametros.index)
+    top_20_parametros = parametros_influencia.head(20)
+    water['is_top_20'] = water['NombreParametroAnalisis2'].isin(top_20_parametros.index)
     return water
 
 
@@ -114,10 +106,7 @@ def standardize_column_names(water):
 
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
-    
-    # water = water_municipality_names(water)
-    # logging.info("Clean Municupality names successfully.")
-    
+     
     water = dates_water(water)
     logging.info("Dates converted successfully.")
     
@@ -159,24 +148,20 @@ def transformations_water(water):
 # tranformaciones API:
 
 
-# def api_municipality_names(api):
-#     """Limpia los nombres de municipios directamente en la columna especificada de un DataFrame."""
-#     def clean_names(municipality_string):
-#         # Elimina los códigos entre paréntesis y divide por comas
-#         cleaned_list = re.sub(r"\(.+?\)", "", municipality_string).split(',')
-#         # Elimina espacios extras y capitaliza cada nombre de municipio
-#         return [muni.strip().title() for muni in cleaned_list if muni.strip()]
+def remove_parentheses(api):
+    api['municipio'] = api['municipio'].str.replace(r"\(.*?\)", "", regex=True)
+    return api
 
-#     # Aplicar la función de limpieza y explotar los resultados en filas separadas
-#     api['municipio'] = api['municipio'].apply(clean_names)
-#     api = api.explode('municipio').reset_index(drop=True)
-#     return api
+def separate_municipalities(api):
+    api = api.assign(municipio=api['municipio'].str.split(',')).explode('municipio')
+    return api
 
-
+def space_capitalize(api):
+    api['municipio'] = api['municipio'].str.strip().str.capitalize()
+    return api
 
 def dates_api(api):
     api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
-    api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
     return api
 
 def normalize_text_columns(api):
@@ -219,8 +204,14 @@ def drop_unnecessary_columns(api):
 def transformations_api(api):
     logging.info("Starting transformations on API data.")
     
-    # api = api_municipality_names(api)
-    # logging.info("Clean Municupality names successfully.")
+    api = remove_parentheses(api)
+    logging.info("Elimination of parentheses within municipalities successfully.")
+    
+    api = separate_municipalities(api)
+    logging.info("Separates records with multiple municipalities into individual rows successfully.")
+    
+    api = space_capitalize(api)
+    logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
     
     api = dates_api(api)
     logging.info("Dates converted successfully.")
