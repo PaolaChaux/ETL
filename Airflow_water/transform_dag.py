@@ -162,6 +162,7 @@ def space_capitalize(api):
 
 def dates_api(api):
     api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
+    api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
     return api
 
 def normalize_text_columns(api):
@@ -195,6 +196,7 @@ def calculate_financing(api):
 def calculate_project_duration(api):
     api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_terminacion_proyecto']).dt.days
     return api
+
 
 def drop_unnecessary_columns(api):
     api.drop(['fecha_de_corte', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
