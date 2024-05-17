@@ -1,37 +1,9 @@
 import time
+import kafka
 from kafka import KafkaAdminClient, KafkaProducer, KafkaConsumer
 from kafka.admin import NewTopic
 from Main_Aqua_Quality.main_data.db_Dimesional_Modeling import run_query
-from Main_Aqua_Quality.main_data.kafka import kafka_producer
-
-def create_topic(topic_name, num_partitions=1, replication_factor=1, bootstrap_servers='localhost:9092'):
-    admin_client = KafkaAdminClient(bootstrap_servers=bootstrap_servers)
-    topic_list = [NewTopic(name=topic_name, num_partitions=num_partitions, replication_factor=replication_factor)]
-    admin_client.create_topics(new_topics=topic_list, validate_only=False)
-    print(f'Topic {topic_name} created successfully')
-
-def kafka_producer(row):
-    producer = KafkaProducer(
-        bootstrap_servers=['localhost:9092'],
-        value_serializer=lambda v: dumps(v).encode('utf-8')
-    )
-    message = row.to_dict()
-    producer.send('kafka-water', value=message)
-    producer.flush()
-    print("Message sent")
-
-def kafka_consumer():
-    consumer = KafkaConsumer(
-        'kafka-water',
-        bootstrap_servers=['localhost:9092'],
-        auto_offset_reset='earliest',
-        enable_auto_commit=True,
-        group_id='my-group-1',
-        value_deserializer=lambda x: loads(x.decode('utf-8'))
-    )
-    for message in consumer:
-        df = pd.json_normalize(message.value)
-        print(df)
+from Main_Aqua_Quality.main_data.kafka import kafka_producer, kafka_consumer
 
 def stream_data():
     sql = '''SELECT * 
@@ -43,8 +15,18 @@ def stream_data():
         time.sleep(1)
 
 if __name__ == '__main__':
+    # Crear el tópico si no existe
+    from kafka.admin import AdminClient, NewTopic
+
+    def create_topic(topic_name, num_partitions=1, replication_factor=1, bootstrap_servers='localhost:9092'):
+        admin_client = AdminClient({'bootstrap.servers': bootstrap_servers})
+        topic_list = [NewTopic(topic_name, num_partitions, replication_factor)]
+        admin_client.create_topics(topic_list)
+
     create_topic('kafka-water')
+
+    # Iniciar el flujo de datos
     stream_data()
 
-
+    # Iniciar el consumidor (esto puede ejecutarse en un hilo separado si se necesita)
     kafka_consumer()
