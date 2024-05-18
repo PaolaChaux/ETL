@@ -170,15 +170,15 @@ def transformations_water(water):
 
 
 def remove_parentheses(api):
-    api['municipio'] = api['municipio'].str.replace(r"\(.*?\)", "", regex=True)
+    api['nombre_municipio'] = api['nombre_municipio'].str.replace(r"\(.*?\)", "", regex=True)
     return api
 
 def separate_municipalities(api):
-    api = api.assign(municipio=api['municipio'].str.split(',')).explode('municipio')
+    api = api.assign(municipio=api['nombre_municipio'].str.split(',')).explode('nombre_municipio')
     return api
 
 def space_capitalize(api):
-    api['municipio'] = api['municipio'].str.strip().str.capitalize()
+    api['nombre_municipio'] = api['nombre_municipio'].str.strip().str.capitalize()
     return api
 
 
@@ -199,7 +199,7 @@ def normalize_text_columns(api):
 
 
 def standardize_place_names_api(api):
-    api['municipio'] = api['municipio'].str.title().str.strip()
+    api['nombre_municipio'] = api['nombre_municipio'].str.title().str.strip()
     return api
 
 def compute_num_municipios(api):
@@ -226,7 +226,7 @@ def calculate_financing(api):
     return api
 
 def calculate_project_duration(api):
-    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_terminacion_proyecto']).dt.days
+    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_proyecto']).dt.days
     return api
 
 
