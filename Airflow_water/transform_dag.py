@@ -175,7 +175,7 @@ def renombrar_columnas(api):
 
 
 def dates_api(api):
-    api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
+    api['fecha_proyecto'] = pd.to_datetime(api['fecha_proyecto'])
     api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
     return api
 
