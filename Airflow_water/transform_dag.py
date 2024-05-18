@@ -177,7 +177,7 @@ def normalize_text_columns(api):
 
 
 def standardize_place_names_api(api):
-    api['municipio'] = api['nombre_municipio'].str.title().str.strip()
+    api['municipio'] = api['municipio'].str.title().str.strip()
     return api
 
 def compute_num_municipios(api):
