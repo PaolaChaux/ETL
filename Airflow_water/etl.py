@@ -75,7 +75,16 @@ def merge_task(**kwargs):
     water_cleaned_df = pd.read_json(water_json, orient='records')
     api_done_df = pd.read_json(api_json, orient='records')
     
-    logging.info("Ejecutando la función de merge.")
+    logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
+    # Asegurarse de que las fechas estén en formato datetime
+    try:
+        api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'])
+        water_cleaned_df['año'] = pd.to_datetime(water_cleaned_df['año'])
+    except Exception as e:
+        logging.error("Error al convertir las columnas de fecha a formato datetime: %s", e)
+        raise
+    
+    logging.info("Fechas convertidas exitosamente. Ejecutando la función de merge.")
     # Ejecutar la función de merge
     merged_json = merge_datasets(api_done_df, water_cleaned_df)
     

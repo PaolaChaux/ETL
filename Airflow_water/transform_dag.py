@@ -22,6 +22,18 @@ def normalize_text_columns_water(water):
     water[str_cols] = water[str_cols].apply(lambda x: x.str.lower().str.strip())
     return water
 
+def renombrar_columnas_water(water):
+    water = water.rename(columns={
+        'numeroparametrospromedio': 'numero_parametros_promedio',
+        'nombreparametroanalisis2': 'nombre_parametro_analisis',
+        'ircapromedio': 'irca_promedio',
+        'nombremunicipio': 'nombre_municipio',
+        'nombredepartamento': 'nombre_departamento',
+        'fecha_terminacion_proyecto': 'fecha_proyecto'
+    })
+    return water
+
+
 def scale_columns(water):
     scaler = MinMaxScaler()
     columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
@@ -72,7 +84,7 @@ def categorize_treatment(water):
             return 'Tratamiento completo'
         else:
             return 'Tratamiento parcial'
-    water.loc[:, 'TratamientoCategoría'] = water.apply(categorize, axis=1)
+    water.loc[:, 'tratamiento_categoría'] = water.apply(categorize, axis=1)
     return water
     
 
