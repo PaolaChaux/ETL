@@ -8,9 +8,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import logging
+
+def renombrar_columnas_water(water):
+    columns_rename = {
+        'NumeroParametrosPromedio': 'numero_parametros_promedio',
+        'NombreParametroAnalisis2': 'nombre_parametro_analisis',
+        'IrcaPromedio': 'irca_promedio',
+        'NombreMunicipio': 'nombre_municipio',
+        'NombreDepartamento': 'nombre_departamento',
+    }
+    water = water.rename(columns=columns_rename)
+    return water
+
 
 def dates_water(water):
     water['Año'] = pd.to_datetime(water['Año'])
@@ -94,17 +103,7 @@ def drop_unnecessary_columns_water(water):
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
     return water.drop(columns=columns_to_drop)
 
-def renombrar_columnas_water(water):
-    columns_rename = {
-        'numeroparametrospromedio': 'numero_parametros_promedio',
-        'nombreparametroanalisis2': 'nombre_parametro_analisis',
-        'ircapromedio': 'irca_promedio',
-        'nombremunicipio': 'nombre_municipio',
-        'nombredepartamento': 'nombre_departamento',
-        'fecha_terminacion_proyecto': 'fecha_proyecto'
-    }
-    water = water.rename(columns=columns_rename)
-    return water
+
 
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
