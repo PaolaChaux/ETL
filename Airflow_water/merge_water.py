@@ -30,7 +30,7 @@ def merge_datasets(api_done_df, water_cleaned_df):
         
         logging.info("Eliminando columnas redundantes.")
         # Eliminar columnas redundantes excepto "fecha_de_corte"
-        columns_to_drop = ['c_digo_divipola_departamento', 'departamento', 'c_digo_divipola_municipio']
+        columns_to_drop = ['codigo_departamento', 'departamento', 'c_digo_divipola_municipio']
         merged_df = merged_df.drop(columns=columns_to_drop)
         logging.info("Columnas redundantes eliminadas.")
         
