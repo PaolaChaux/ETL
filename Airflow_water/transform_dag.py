@@ -177,10 +177,8 @@ def normalize_text_columns(api):
 
 
 def standardize_place_names_api(api):
-    api['nombre_municipio'] = api['nombre_municipio'].str.title().str.strip()
+    api['municipio'] = api['nombre_municipio'].str.title().str.strip()
     return api
-
-
 
 def compute_num_municipios(api):
     api['num_municipios'] = api['c_digo_divipola_municipio'].apply(lambda x: len(x.split(',')))
