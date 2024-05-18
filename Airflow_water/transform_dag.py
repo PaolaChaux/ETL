@@ -19,7 +19,8 @@ def standardize_place_names(water):
 
 def normalize_text_columns_water(water):
     str_cols = water.select_dtypes(include=['object']).columns
-    water[str_cols] = water[str_cols].apply(lambda x: x.str.lower().str.strip())
+    for col in str_cols:
+        water[col] = water[col].astype(str).str.lower().str.strip()
     return water
 
 def renombrar_columnas_water(water):
