@@ -23,14 +23,15 @@ def normalize_text_columns_water(water):
     return water
 
 def renombrar_columnas_water(water):
-    water = water.rename(columns={
+    columns_rename = {
         'numeroparametrospromedio': 'numero_parametros_promedio',
         'nombreparametroanalisis2': 'nombre_parametro_analisis',
         'ircapromedio': 'irca_promedio',
         'nombremunicipio': 'nombre_municipio',
         'nombredepartamento': 'nombre_departamento',
         'fecha_terminacion_proyecto': 'fecha_proyecto'
-    })
+    }
+    water = water.rename(columns=columns_rename)
     return water
 
 def scale_columns(water):
