@@ -133,6 +133,9 @@ def transformations_water(water):
     water = normalize_text_columns_water (water)
     logging.info("normalize text colums water succesfully")
     
+    water = renombrar_columnas_water(water)
+    logging.info("renombrar columnass water succesfully")
+    
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
     
