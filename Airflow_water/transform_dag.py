@@ -113,40 +113,7 @@ def transformations_water(water):
     logging.info("Renombrar columnas water successfully.")
     print("Columnas después de renombrar_columnas_water:", water.columns)
     
-    # Después, aplicar las transformaciones que dependen de los nuevos nombres
-    water = dates_water(water)
-    logging.info("Dates converted successfully.")
-    print("Columnas después de dates_water:", water.columns)
-    
-    water = normalize_text_columns_water(water)
-    logging.info("Normalize text columns water successfully.")
-    print("Columnas después de normalize_text_columns_water:", water.columns)
-    
-    water = scale_columns(water)
-    logging.info("Scaled numerical columns.")
-    print("Columnas después de scale_columns:", water.columns)
-    
-    water = filter_top_parameters(water)
-    logging.info("Filtered top influential parameters.")
-    print("Columnas después de filter_top_parameters:", water.columns)
-    
-    water = classify_irca(water)
-    logging.info("Classified IRCA values into categories.")
-    print("Columnas después de classify_irca:", water.columns)
-    
-    water = categorize_treatment(water)
-    logging.info("Categorized treatment data.")
-    print("Columnas después de categorize_treatment:", water.columns)
-    
-    water = calculate_critical_proportion(water)
-    logging.info("Calculated critical proportion.")
-    print("Columnas después de calculate_critical_proportion:", water.columns)
-    
-    water = drop_unnecessary_columns_water(water)
-    logging.info("Dropped unnecessary columns.")
-    print("Columnas después de drop_unnecessary_columns_water:", water.columns)
-    
-    
+ 
     logging.info("All transformations applied successfully.")
     return water
 
