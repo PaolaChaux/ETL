@@ -53,18 +53,21 @@ with DAG(
         provide_context=True,
     )
 
-    
+
+
+
+    merge_task = PythonOperator(
+        task_id='merge',
+        python_callable=etl.merge_task,
+        provide_context=True,
+    )
     
     read_water >> transform_water
     read_api >> transform_api
-    
+    [transform_water, transform_api] >> merge_task
 
 
-    # merge_task = PythonOperator(
-    #     task_id='merge',
-    #     python_callable=etl.merge_task,
-    #     provide_context=True,
-    # )
+   
 
     # load_task = PythonOperator(
     #     task_id='load_task',
@@ -79,4 +82,4 @@ with DAG(
   
 
 
-    # [transform_water, transform_api] >> merge_task >> load_task
+    #  >> load_task
