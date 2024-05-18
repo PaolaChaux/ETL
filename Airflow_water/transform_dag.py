@@ -111,10 +111,14 @@ def transformations_water(water):
     logging.info("Starting transformations on water data.")
      
   
-    
+    water = dates_water(water)
+    logging.info("Dates converted successfully.")
     
     water = normalize_text_columns_water(water)
     logging.info("normalize text colums water succesfully")
+    
+    water = renombrar_columnas_water(water)
+    logging.info("renombrar columnass water succesfully")
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
@@ -136,12 +140,9 @@ def transformations_water(water):
     
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
+
     
-    water = dates_water(water)
-    logging.info("Dates converted successfully.")
     
-    water = renombrar_columnas_water(water)
-    logging.info("renombrar columnass water succesfully")
     
     logging.info("All transformations applied successfully.")
     return water
