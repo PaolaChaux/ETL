@@ -17,6 +17,11 @@ def standardize_place_names(water):
     water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
     return water
 
+def normalize_text_columns_water(water):
+    str_cols = water.select_dtypes(include=['object']).columns
+    water[str_cols] = water[str_cols].apply(lambda x: x.str.lower().str.strip())
+    return water
+
 def scale_columns(water):
     scaler = MinMaxScaler()
     columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
@@ -113,6 +118,9 @@ def transformations_water(water):
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
     
+    water = normalize_text_columns_water (water)
+    logging.info("normalize text colums water succesfully")
+    
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
     
@@ -160,6 +168,12 @@ def space_capitalize(api):
     api['municipio'] = api['municipio'].str.strip().str.capitalize()
     return api
 
+
+def renombrar_columnas(api):
+    api = api.rename(columns={'municipio': 'nombre_municipio', 'fecha_terminacion_proyecto': 'fecha_proyecto'})
+    return api
+
+
 def dates_api(api):
     api['fecha_terminacion_proyecto'] = pd.to_datetime(api['fecha_terminacion_proyecto'])
     api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
@@ -169,6 +183,13 @@ def normalize_text_columns(api):
     str_cols = api.select_dtypes(include=['object']).columns
     api[str_cols] = api[str_cols].apply(lambda x: x.str.lower().str.strip())
     return api
+
+
+def standardize_place_names_api(api):
+    api['nombre_municipio'] = api['nombre_municipio'].str.title().str.strip()
+    return api
+
+
 
 def compute_num_municipios(api):
     api['num_municipios'] = api['c_digo_divipola_municipio'].apply(lambda x: len(x.split(',')))
@@ -215,12 +236,19 @@ def transformations_api(api):
     api = space_capitalize(api)
     logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
     
+    api = renombrar_columnas(api)
+    logging.info("Renombrar columna municipio successful.")
+    
     api = dates_api(api)
     logging.info("Dates converted successfully.")
 
     api = normalize_text_columns(api)
     logging.info("Text columns normalized successfully.")
     
+    
+    api = standardize_place_names_api(api)
+    logging.info(" Standardized place names API successful.")
+   
     api = compute_num_municipios(api)
     logging.info("Number of municipalities computed successfully.")
     
