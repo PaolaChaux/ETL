@@ -152,6 +152,9 @@ def transformations_water(water):
     water = standardize_column_names(water)
     logging.info("Standardized column names.")
     
+    water = renombrar_columnas_water(water)
+    logging.info("Renamed columns in water successfully.")
+    
     logging.info("All transformations applied successfully.")
     return water
 
