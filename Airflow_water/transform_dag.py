@@ -38,7 +38,7 @@ def normalize_text_columns_water(water):
 
 def scale_columns(water):
     scaler = MinMaxScaler()
-    columns_to_scale = ['muestras_evaluadas', 'muestras_tratadas', 'muestras_sin_tratar']
+    columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
     water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
     return water
 
@@ -75,9 +75,9 @@ def classify_irca(water):
 def categorize_treatment(water):
     """Categorizar el tratamiento de muestras."""
     def categorize(row):
-        if row['muestras_tratadas'] == 0:
+        if row['MuestrasTratadas'] == 0:
             return 'Sin tratamiento'
-        elif row['muestras_tratadas'] == row['muestras_evaluadas']:
+        elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
             return 'Tratamiento completo'
         else:
             return 'Tratamiento parcial'
@@ -100,7 +100,7 @@ def calculate_critical_proportion(water, threshold=50):
 def drop_unnecessary_columns_water(water):
     """Eliminar columnas que no son necesarias para el análisis."""
     columns_to_drop = ['muestras_tratadas', 'muestras_evaluadas', 'muestras_sin_tratar',
-                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
+                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio','IrcaMaximo', 'IrcaMinimo'  ]
     return water.drop(columns=columns_to_drop)
 
 
@@ -108,12 +108,50 @@ def drop_unnecessary_columns_water(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
     
+    
+    
+    
+    
     # Primero, renombrar las columnas para asegurarnos de que los nombres sean consistentes
+    
     water = renombrar_columnas_water(water)
     logging.info("Renombrar columnas water successfully.")
     print("Columnas después de renombrar_columnas_water:", water.columns)
     
- 
+       # Después, aplicar las transformaciones que dependen de los nuevos nombres
+    water = dates_water(water)
+    logging.info("Dates converted successfully.")
+    print("Columnas después de dates_water:", water.columns)
+    
+    water = normalize_text_columns_water(water)
+    logging.info("Normalize text columns water successfully.")
+    print("Columnas después de normalize_text_columns_water:", water.columns)
+    
+    water = scale_columns(water)
+    logging.info("Scaled numerical columns.")
+    print("Columnas después de scale_columns:", water.columns)
+    
+    water = filter_top_parameters(water)
+    logging.info("Filtered top influential parameters.")
+    print("Columnas después de filter_top_parameters:", water.columns)
+    
+    water = classify_irca(water)
+    logging.info("Classified IRCA values into categories.")
+    print("Columnas después de classify_irca:", water.columns)
+    
+    water = categorize_treatment(water)
+    logging.info("Categorized treatment data.")
+    print("Columnas después de categorize_treatment:", water.columns)
+    
+    water = calculate_critical_proportion(water)
+    logging.info("Calculated critical proportion.")
+    print("Columnas después de calculate_critical_proportion:", water.columns)
+    
+    water = drop_unnecessary_columns_water(water)
+    logging.info("Dropped unnecessary columns.")
+    print("Columnas después de drop_unnecessary_columns_water:", water.columns)
+    
+    
     logging.info("All transformations applied successfully.")
     return water
 
