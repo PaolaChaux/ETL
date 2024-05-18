@@ -16,6 +16,7 @@ def renombrar_columnas_water(water):
         'IrcaPromedio': 'irca_promedio',
         'NombreMunicipio': 'nombre_municipio',
         'NombreDepartamento': 'nombre_departamento',
+        'Año': 'año',
     }
     water = water.rename(columns=columns_rename)
     return water

@@ -50,10 +50,10 @@ def merge_datasets(api_done_df, water_cleaned_df):
         }, inplace=True)
         logging.info("Entradas faltantes llenadas.")
         
-        logging.info("Guardando el DataFrame resultante en un archivo CSV.")
-        # Guardar el DataFrame resultante en un archivo CSV
-        merged_df.to_csv('merged_water.csv', index=False)
-        logging.info("Archivo CSV guardado exitosamente.")
+        # logging.info("Guardando el DataFrame resultante en un archivo CSV.")
+        # # Guardar el DataFrame resultante en un archivo CSV
+        # merged_df.to_csv('merged_water.csv', index=False)
+        # logging.info("Archivo CSV guardado exitosamente.")
         
         # Resultados
         logging.info(f"Municipios con proyectos: {merged_df[merged_df['nombre_proyecto'] != 'Ausencia de proyecto']['nombre_municipio'].nunique()}")
