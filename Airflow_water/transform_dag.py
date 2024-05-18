@@ -235,38 +235,17 @@ def drop_unnecessary_columns(api):
     return api
 
 
+
+
+
+
+
+
+
+
+
 def transformations_api(api):
     logging.info("Starting transformations on API data.")
-    
-    api = remove_parentheses(api)
-    logging.info("Elimination of parentheses within municipalities successfully.")
-    
-    api = separate_municipalities(api)
-    logging.info("Separates records with multiple municipalities into individual rows successfully.")
-    
-    api = space_capitalize(api)
-    logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
-    
-    api = normalize_text_columns(api)
-    logging.info("Text columns normalized successfully.")
-    
-    api = standardize_place_names_api(api)
-    logging.info(" Standardized place names API successful.")
-   
-    api = compute_num_municipios(api)
-    logging.info("Number of municipalities computed successfully.")
-    
-    api = map_regions(api)
-    logging.info("Regions mapped successfully.")
-    
-    api = calculate_financing(api)
-    logging.info("Project financing calculated successfully.")
-    
-    api = calculate_project_duration(api)
-    logging.info("Project duration calculated successfully.")
-    
-    api = drop_unnecessary_columns(api)
-    logging.info("Unnecessary columns dropped successfully.")
     
     api = renombrar_columnas(api)
     logging.info("Renombrar columna municipio successful.")
@@ -276,4 +255,39 @@ def transformations_api(api):
     
     logging.info("All transformations applied successfully.")
     return api
+    
+    
+    
+    
+    # api = remove_parentheses(api)
+    # logging.info("Elimination of parentheses within municipalities successfully.")
+    
+    # api = separate_municipalities(api)
+    # logging.info("Separates records with multiple municipalities into individual rows successfully.")
+    
+    # api = space_capitalize(api)
+    # logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
+    
+    # api = normalize_text_columns(api)
+    # logging.info("Text columns normalized successfully.")
+    
+    # api = standardize_place_names_api(api)
+    # logging.info(" Standardized place names API successful.")
+   
+    # api = compute_num_municipios(api)
+    # logging.info("Number of municipalities computed successfully.")
+    
+    # api = map_regions(api)
+    # logging.info("Regions mapped successfully.")
+    
+    # api = calculate_financing(api)
+    # logging.info("Project financing calculated successfully.")
+    
+    # api = calculate_project_duration(api)
+    # logging.info("Project duration calculated successfully.")
+    
+    # api = drop_unnecessary_columns(api)
+    # logging.info("Unnecessary columns dropped successfully.")
+    
+    
 
