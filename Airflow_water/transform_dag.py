@@ -194,7 +194,9 @@ def dates_api(api):
 
 def normalize_text_columns(api):
     str_cols = api.select_dtypes(include=['object']).columns
-    api[str_cols] = api[str_cols].apply(lambda x: x.str.lower().str.strip())
+    for col in str_cols:
+        if api[col].dtype == 'object':
+            api[col] = api[col].str.lower().str.strip()
     return api
 
 
