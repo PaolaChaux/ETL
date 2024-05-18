@@ -119,7 +119,6 @@ def standardize_column_names(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
      
-    
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
     
@@ -251,11 +250,8 @@ def transformations_api(api):
     api = space_capitalize(api)
     logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
     
-    
-
     api = normalize_text_columns(api)
     logging.info("Text columns normalized successfully.")
-    
     
     api = standardize_place_names_api(api)
     logging.info(" Standardized place names API successful.")
