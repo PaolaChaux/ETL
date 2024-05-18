@@ -23,16 +23,7 @@ def normalize_text_columns_water(water):
         water[col] = water[col].astype(str).str.lower().str.strip()
     return water
 
-def renombrar_columnas_water(water):
-    columns_rename = {
-        'NumeroParametrosPromedio': 'numero_parametros_promedio',
-        'NombreParametroAnalisis2': 'nombre_parametro_analisis',
-        'IrcaPromedio': 'irca_promedio',
-        'NombreMunicipio': 'nombre_municipio',
-        'NombreDepartamento': 'nombre_departamento',
-    }
-    water = water.rename(columns=columns_rename)
-    return water
+
 
 def scale_columns(water):
     scaler = MinMaxScaler()
@@ -100,6 +91,18 @@ def drop_unnecessary_columns_water(water):
     columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
     return water.drop(columns=columns_to_drop)
+
+def renombrar_columnas_water(water):
+    columns_rename = {
+        'NumeroParametrosPromedio': 'numero_parametros_promedio',
+        'NombreParametroAnalisis2': 'nombre_parametro_analisis',
+        'IrcaPromedio': 'irca_promedio',
+        'NombreMunicipio': 'nombre_municipio',
+        'NombreDepartamento': 'nombre_departamento',
+    }
+    water = water.rename(columns=columns_rename)
+    return water
+
 
 def standardize_column_names(water):
     water.columns = water.columns.str.lower().str.replace(' ', '_')
