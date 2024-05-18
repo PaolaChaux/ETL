@@ -79,6 +79,10 @@ The project involved several stages, including data cleaning, transformation, an
 * Seaborn.
 * Python.
 * Jupiter Notebook.
+* AirFlow
+* Kafka
+* CSV files and API consumption
+* Git/Github
 
 ## 6. Features
 
