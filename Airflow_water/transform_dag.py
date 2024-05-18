@@ -121,9 +121,6 @@ def transformations_water(water):
     water = normalize_text_columns_water(water)
     logging.info("normalize text colums water succesfully")
     
-    water = renombrar_columnas_water(water)
-    logging.info("renombrar columnass water succesfully")
-    
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
     
@@ -141,6 +138,9 @@ def transformations_water(water):
     
     water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
+    
+    water = renombrar_columnas_water(water)
+    logging.info("renombrar columnass water succesfully")
     
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
