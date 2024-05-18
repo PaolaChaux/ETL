@@ -93,9 +93,9 @@ def drop_unnecessary_columns_water(water):
 
 def renombrar_columnas_water(water):
     columns_rename = {
-        'numeroparametrospromedio': 'numero_parametros_promedio',
+        'NumeroParametrosPromedio': 'numero_parametros_promedio',
         'NombreParametroAnalisis2': 'nombre_parametro_analisis',
-        'ircapromedio': 'irca_promedio',
+        'IrcaPromedio': 'irca_promedio',
         'nombremunicipio': 'nombre_municipio',
         'nombredepartamento': 'nombre_departamento',
     }
