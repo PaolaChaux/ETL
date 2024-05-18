@@ -215,7 +215,7 @@ def calculate_financing(api):
     return api
 
 def calculate_project_duration(api):
-    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_terminacion_proyecto']).dt.days
+    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_proyecto']).dt.days
     return api
 
 
