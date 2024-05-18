@@ -8,13 +8,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 
+
 def dates_water(water):
-    water['Año'] = pd.to_datetime(water['Año'])
+    if 'Año' in water.columns:
+        water['Año'] = pd.to_datetime(water['Año'])
     return water
 
 def standardize_place_names(water):
-    water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
-    water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
+    if 'NombreDepartamento' in water.columns:
+        water['NombreDepartamento'] = water['NombreDepartamento'].str.title().str.strip()
+    if 'NombreMunicipio' in water.columns:
+        water['NombreMunicipio'] = water['NombreMunicipio'].str.title().str.strip()
     return water
 
 def normalize_text_columns_water(water):
@@ -23,103 +27,94 @@ def normalize_text_columns_water(water):
     return water
 
 def renombrar_columnas_water(water):
-    water = water.rename(columns={
+    columns_rename = {
         'numeroparametrospromedio': 'numero_parametros_promedio',
         'nombreparametroanalisis2': 'nombre_parametro_analisis',
         'ircapromedio': 'irca_promedio',
         'nombremunicipio': 'nombre_municipio',
         'nombredepartamento': 'nombre_departamento',
         'fecha_terminacion_proyecto': 'fecha_proyecto'
-    })
+    }
+    water = water.rename(columns=columns_rename)
     return water
-
 
 def scale_columns(water):
     scaler = MinMaxScaler()
     columns_to_scale = ['MuestrasEvaluadas', 'MuestrasTratadas', 'MuestrasSinTratar']
-    water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
+    for column in columns_to_scale:
+        if column not in water.columns:
+            columns_to_scale.remove(column)
+    if columns_to_scale:
+        water[columns_to_scale] = scaler.fit_transform(water[columns_to_scale])
     return water
-
 
 def filter_top_parameters(water):
-    parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
-    top_20_parametros = parametros_influencia.head(20)
-    water['is_top_20'] = water['NombreParametroAnalisis2'].isin(top_20_parametros.index)
+    if 'NombreParametroAnalisis2' in water.columns and 'IrcaPromedio' in water.columns:
+        parametros_influencia = water.groupby('NombreParametroAnalisis2')['IrcaPromedio'].mean().sort_values(ascending=False)
+        top_20_parametros = parametros_influencia.head(20)
+        water['is_top_20'] = water['NombreParametroAnalisis2'].isin(top_20_parametros.index)
     return water
-
-
 
 def classify_irca(water):
-    def clasificar_irca(irca):
-        try:
-            if isinstance(irca, str):
-                irca = float(irca.replace(',', '.'))
-            if irca == 0:
-                return 'Sin información'
-            elif irca < 5:
-                return 'Sin riesgo'
-            elif irca < 14:
-                return 'Riesgo bajo'
-            elif irca < 35:
-                return 'Riesgo medio'
-            elif irca < 80:
-                return 'Riesgo alto'
-            elif irca <= 100:
-                return 'Riesgo inviable sanitariamente'
-            else:
+    if 'IrcaPromedio' in water.columns:
+        def clasificar_irca(irca):
+            try:
+                if isinstance(irca, str):
+                    irca = float(irca.replace(',', '.'))
+                if irca == 0:
+                    return 'Sin información'
+                elif irca < 5:
+                    return 'Sin riesgo'
+                elif irca < 14:
+                    return 'Riesgo bajo'
+                elif irca < 35:
+                    return 'Riesgo medio'
+                elif irca < 80:
+                    return 'Riesgo alto'
+                elif irca <= 100:
+                    return 'Riesgo inviable sanitariamente'
+                else:
+                    return 'No clasificado'
+            except ValueError:
                 return 'No clasificado'
-        except ValueError:
-            return 'No clasificado'
-    water.loc[:, 'rango_irca'] = water['IrcaPromedio'].apply(clasificar_irca)
+        water['rango_irca'] = water['IrcaPromedio'].apply(clasificar_irca)
     return water
-   
-
 
 def categorize_treatment(water):
-    """Categorizar el tratamiento de muestras."""
-    def categorize(row):
-        if row['MuestrasTratadas'] == 0:
-            return 'Sin tratamiento'
-        elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
-            return 'Tratamiento completo'
-        else:
-            return 'Tratamiento parcial'
-    water.loc[:, 'tratamiento_categoría'] = water.apply(categorize, axis=1)
+    if 'MuestrasTratadas' in water.columns and 'MuestrasEvaluadas' in water.columns:
+        def categorize(row):
+            if row['MuestrasTratadas'] == 0:
+                return 'Sin tratamiento'
+            elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
+                return 'Tratamiento completo'
+            else:
+                return 'Tratamiento parcial'
+        water['tratamiento_categoria'] = water.apply(categorize, axis=1)
     return water
-    
-
 
 def calculate_critical_proportion(water, threshold=50):
-    """Calcular la proporción crítica de IRCA que supera un umbral especificado."""
-    def proportion(row):
-        if row['IrcaMaximo'] == row['IrcaMinimo']:
-            return 0
-        else:
-            lower_bound = max(threshold, row['IrcaMinimo'])
-            if lower_bound > row['IrcaMaximo']:
+    if 'IrcaMaximo' in water.columns and 'IrcaMinimo' in water.columns:
+        def proportion(row):
+            if row['IrcaMaximo'] == row['IrcaMinimo']:
                 return 0
-            return (row['IrcaMaximo'] - lower_bound) / (row['IrcaMaximo'] - row['IrcaMinimo'])
-
-    water['Proporción Crítica'] = water.apply(proportion, axis=1)
+            else:
+                lower_bound = max(threshold, row['IrcaMinimo'])
+                if lower_bound > row['IrcaMaximo']:
+                    return 0
+                return (row['IrcaMaximo'] - lower_bound) / (row['IrcaMaximo'] - row['IrcaMinimo'])
+        water['proporcion_critica'] = water.apply(proportion, axis=1)
     return water
 
-
 def drop_unnecessary_columns_water(water):
-    """Eliminar columnas que no son necesarias para el análisis."""
     columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio']
-    return water.drop(columns=columns_to_drop)
-
-
+    water = water.drop(columns=[col for col in columns_to_drop if col in water.columns])
+    return water
 
 def standardize_column_names(water):
     water.columns = water.columns.str.lower().str.replace(' ', '_')
     logging.info("Column names standardized")
     return water
-
-
-
-
 
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
@@ -130,11 +125,11 @@ def transformations_water(water):
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
     
-    water = normalize_text_columns_water (water)
-    logging.info("normalize text colums water succesfully")
+    water = normalize_text_columns_water(water)
+    logging.info("Normalized text columns in water successfully.")
     
     water = renombrar_columnas_water(water)
-    logging.info("renombrar columnass water succesfully")
+    logging.info("Renamed columns in water successfully.")
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
@@ -149,7 +144,7 @@ def transformations_water(water):
     logging.info("Categorized treatment data.")
     
     water = calculate_critical_proportion(water)
-    logging.info("Critical Proportion.")
+    logging.info("Calculated critical proportion.")
     
     water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
@@ -159,6 +154,7 @@ def transformations_water(water):
     
     logging.info("All transformations applied successfully.")
     return water
+
 
         
     
