@@ -99,7 +99,7 @@ def calculate_critical_proportion(water, threshold=50):
 
 def drop_unnecessary_columns_water(water):
     """Eliminar columnas que no son necesarias para el análisis."""
-    columns_to_drop = ['muestras_tratadas', 'muestras_evaluadas', 'muestras_sin_tratar',
+    columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
                        'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio','IrcaMaximo', 'IrcaMinimo'  ]
     return water.drop(columns=columns_to_drop)
 
