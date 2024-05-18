@@ -185,7 +185,7 @@ def space_capitalize(api):
 
 
 def renombrar_columnas(api):
-    api = api.rename(columns={'municipio': 'nombre_municipio', 'fecha_terminacion_proyecto': 'fecha_proyecto'})
+    api = api.rename(columns={'municipio': 'nombre_municipio', 'fecha_terminacion_proyecto': 'fecha_proyecto', 'c_digo_divipola_departamento': 'codigo_departamento'})
     return api
 
 
@@ -251,11 +251,7 @@ def transformations_api(api):
     api = space_capitalize(api)
     logging.info("Elimination of extra spaces and capitalization of each municipality name successful.")
     
-    api = renombrar_columnas(api)
-    logging.info("Renombrar columna municipio successful.")
     
-    api = dates_api(api)
-    logging.info("Dates converted successfully.")
 
     api = normalize_text_columns(api)
     logging.info("Text columns normalized successfully.")
@@ -278,6 +274,12 @@ def transformations_api(api):
     
     api = drop_unnecessary_columns(api)
     logging.info("Unnecessary columns dropped successfully.")
+    
+    api = renombrar_columnas(api)
+    logging.info("Renombrar columna municipio successful.")
+    
+    api = dates_api(api)
+    logging.info("Dates converted successfully.")
     
     logging.info("All transformations applied successfully.")
     return api
