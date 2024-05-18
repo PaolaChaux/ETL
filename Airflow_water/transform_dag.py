@@ -119,8 +119,6 @@ def standardize_column_names(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
      
-    water = dates_water(water)
-    logging.info("Dates converted successfully.")
     
     water = standardize_place_names(water)
     logging.info("Standardized place names.")
@@ -154,6 +152,9 @@ def transformations_water(water):
     
     water = renombrar_columnas_water(water)
     logging.info("Renamed columns in water successfully.")
+    
+    water = dates_water(water)
+    logging.info("Dates converted successfully.")
     
     logging.info("All transformations applied successfully.")
     return water
