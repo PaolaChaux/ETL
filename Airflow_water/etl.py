@@ -8,18 +8,7 @@ from sodapy import Socrata
 from transform_dag import transformations_api
 from transform_dag import transformations_water
 from merge_water import merge_datasets
-
-
-
-# def read_water():
-#     with open('./dag_water/db_config.json') as file:
-#         db_config = json.load(file)
-
-#     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
-    
-#     water = pd.read_sql('SELECT * FROM water_table LIMIT 100000', con=engine)
-    
-#     return water.to_json(orient='records')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def read_water():
@@ -28,16 +17,27 @@ def read_water():
 
     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
     
-    # Usar el nombre correcto de la columna de fecha
-    query = '''
-    SELECT *
-    FROM water_table
-    WHERE EXTRACT(YEAR FROM "Año") >= 2018
-    '''
-    
-    water = pd.read_sql(query, con=engine)
+    water = pd.read_sql('SELECT * FROM water_table LIMIT 100000', con=engine)
     
     return water.to_json(orient='records')
+
+
+# def read_water():
+#     with open('./dag_water/db_config.json') as file:
+#         db_config = json.load(file)
+
+#     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
+    
+#     # Usar el nombre correcto de la columna de fecha
+#     query = '''
+#     SELECT *
+#     FROM water_table
+#     WHERE EXTRACT(YEAR FROM "Año") >= 2018
+#     '''
+    
+#     water = pd.read_sql(query, con=engine)
+    
+#     return water.to_json(orient='records')
 
 
 
@@ -79,9 +79,6 @@ def transform_api(**kwargs):
     return api_transformed.to_json(orient='records')
 
 
-
-
-
 def merge_task(**kwargs):
     ti = kwargs['ti']
     
@@ -94,32 +91,62 @@ def merge_task(**kwargs):
     water_cleaned_df = pd.read_json(water_json, orient='records')
     api_done_df = pd.read_json(api_json, orient='records')
     
+    logging.info("Asegurando que las columnas son de tipo string.")
+    # Asegurar que las columnas son de tipo string
+    water_cleaned_df['nombre_departamento'] = water_cleaned_df['nombre_departamento'].astype(str)
+    water_cleaned_df['nombre_municipio'] = water_cleaned_df['nombre_municipio'].astype(str)
+    api_done_df['departamento'] = api_done_df['departamento'].astype(str)
+    api_done_df['nombre_municipio'] = api_done_df['nombre_municipio'].astype(str)
     
-    try:
-        logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
-        api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'], errors='coerce')
-        water_cleaned_df['Año'] = pd.to_datetime(water_cleaned_df['Año'], errors='coerce')
-        
-        logging.info("Fechas convertidas exitosamente.")
-    except Exception as e:
-        logging.error("Error al convertir las columnas de fecha a formato datetime: %s", e)
-        raise
+    logging.info("Creando claves únicas para el merge.")
+    # Crear una clave única para el merge en ambos datasets
+    water_cleaned_df['clave'] = water_cleaned_df['nombre_departamento'].str.lower().str.strip() + "_" + water_cleaned_df['nombre_municipio'].str.lower().str.strip()
+    api_done_df['clave'] = api_done_df['departamento'].str.lower().str.strip() + "_" + api_done_df['municipio'].str.lower().str.strip()
+
+    # Loggear algunas claves únicas para verificar
+    logging.info(f"Claves únicas en water_cleaned_df:\n{water_cleaned_df['clave'].unique()[:10]}")
+    logging.info(f"Claves únicas en api_done_df:\n{api_done_df['clave'].unique()[:10]}")
+
+    logging.info("Realizando el merge de los datasets.")
+    # Realizar el merge
+    merged_df = pd.merge(water_cleaned_df, api_done_df, on='clave', how='inner')
     
-    # logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
-    # # Asegurarse de que las fechas estén en formato datetime
-    # try:
-    #     api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'])
-    #     water_cleaned_df['año'] = pd.to_datetime(water_cleaned_df['año'])
-    # except Exception as e:
-    #     logging.error("Error al convertir las columnas de fecha a formato datetime: %s", e)
-    #     raise
+    # Loggear el número de filas y columnas del DataFrame combinado
+    num_filas, num_columnas = merged_df.shape
+    logging.info(f"El DataFrame combinado tiene {num_filas} filas y {num_columnas} columnas.")
     
-    logging.info("Fechas convertidas exitosamente. Ejecutando la función de merge.")
-    # Ejecutar la función de merge
-    merged_json = merge_datasets(api_done_df, water_cleaned_df)
+    # Loggear las primeras filas del DataFrame combinado
+    logging.info(f"Primeras filas del DataFrame combinado:\n{merged_df.head()}")
     
     logging.info("Merge completado y datos convertidos a JSON.")
-    return merged_json
+    return merged_df.to_json(orient='records')
+
+
+
+
+
+
+
+
+# def merge_task(**kwargs):
+#     ti = kwargs['ti']
+    
+#     logging.info("Recuperando los datos transformados de agua y API desde XCom.")
+#     # Recuperar los datos transformados de agua y API desde XCom
+#     water_json = ti.xcom_pull(task_ids='transform_water')
+#     api_json = ti.xcom_pull(task_ids='transform_api')
+    
+#     logging.info("Convirtiendo los datos de JSON a DataFrame.")
+#     water_cleaned_df = pd.read_json(water_json, orient='records')
+#     api_done_df = pd.read_json(api_json, orient='records')
+    
+    
+#     logging.info("Ejecutando la función de merge.")
+#     # Ejecutar la función de merge
+#     merged_json = merge_datasets(api_done_df, water_cleaned_df)
+    
+#     logging.info("Merge completado y datos convertidos a JSON.")
+#     return merged_json
 
 
 

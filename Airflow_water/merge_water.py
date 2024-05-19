@@ -83,7 +83,7 @@ def merge_datasets(api_done_df, water_cleaned_df):
         # Resultados
         logging.info(f"Municipios con proyectos: {merged_df[merged_df['nombre_proyecto'] != 'Ausencia de proyecto']['nombre_municipio'].nunique()}")
         logging.info(f"Número total de filas en el DataFrame resultante: {merged_df.shape[0]}")
-        logging.info(f"Años disponibles en el DataFrame resultante: {merged_df['Año'].dt.year.unique()}")
+        logging.info("Primeras filas del DataFrame resultante:\n%s", merged_df.head().to_string())
         
         # Devolver el DataFrame mergeado como JSON
         return merged_df.to_json(orient='records')
