@@ -53,15 +53,14 @@ with DAG(
         provide_context=True,
     )
     
-
-
-    validate_water = PythonOperator(
+    
+    expectations_water = PythonOperator(
         task_id='validate_water_data',
         python_callable=etl.validate_water_data,
         provide_context=True,
     )
     
-    validate_api = PythonOperator(
+    expectations_api = PythonOperator(
         task_id='validate_api_data',
         python_callable=etl.validate_api_data,
         provide_context=True,
@@ -85,12 +84,4 @@ with DAG(
     #     python_callable=etl.load,
     #     provide_context=True,
     # )
-
-
-
-
-
-  
-
-
     #  >> load_task
