@@ -72,9 +72,9 @@ with DAG(
         provide_context=True,
     )
     
-    read_water >> transform_water >> validate_water
-    read_api >> transform_api >> validate_api
-    [validate_water, validate_api] >> merge_task
+    read_water >> transform_water >> expectations_water
+    read_api >> transform_api >> expectations_api
+    [expectations_water, expectations_water] >> merge_task
 
 
    

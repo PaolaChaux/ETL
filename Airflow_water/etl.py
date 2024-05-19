@@ -82,14 +82,13 @@ def transform_api(**kwargs):
 
 
 
-
 def validate_water_data(**kwargs):
     ti = kwargs['ti']
     water_json = ti.xcom_pull(task_ids='transform_water')
     df_water = pd.read_json(water_json, orient='records')
     water_ge = ge.from_pandas(df_water)
     
-    # 1. Verificar nombres de columnas
+    logging.info("Validating column names")
     expected_columns = [
         'numero_parametros_promedio', 'nombre_parametro_analisis', 'irca_promedio', 
         'nombre_municipio', 'nombre_departamento', 'año', 'is_top_20', 
@@ -97,18 +96,18 @@ def validate_water_data(**kwargs):
     ]
     water_ge.expect_table_columns_to_match_ordered_list(expected_columns)
     
-    # 2. Verificar tipo de datos de las columnas
+    logging.info("Validating column types")
     water_ge.expect_column_values_to_be_of_type('numero_parametros_promedio', 'int64')
     water_ge.expect_column_values_to_be_of_type('irca_promedio', 'float64')
     water_ge.expect_column_values_to_be_of_type('nombre_municipio', 'str')
     water_ge.expect_column_values_to_be_of_type('nombre_departamento', 'str')
     water_ge.expect_column_values_to_be_of_type('año', 'datetime64[ns]')
     
-    # 3. Verificar normalización de nombres de lugares
+    logging.info("Validating place name normalization")
     water_ge.expect_column_values_to_match_regex('nombre_departamento', r'^[A-Z][a-z]+(?: [A-Z][a-z]+)*$')
     water_ge.expect_column_values_to_match_regex('nombre_municipio', r'^[a-z]+(?: [a-z]+)*$')
     
-    # 4. Verificar valores de columnas categóricas
+    logging.info("Validating categorical column values")
     water_ge.expect_column_values_to_be_in_set('rango_irca', [
         'Sin información', 'Sin riesgo', 'Riesgo bajo', 
         'Riesgo medio', 'Riesgo alto', 'Riesgo inviable sanitariamente', 'No clasificado'
@@ -117,19 +116,27 @@ def validate_water_data(**kwargs):
         'Sin tratamiento', 'Tratamiento completo', 'Tratamiento parcial'
     ])
     
-    # 5. Verificar valores escalados
+    logging.info("Validating scaled values")
     water_ge.expect_column_values_to_be_between('proporción_crítica', 0, 1)
     
     results = water_ge.validate()
-    print(results)
+    logging.info(f"Validation results: {results}")
     
     if not results['success']:
+        logging.error("Water data validation failed")
         raise ValueError("Water data validation failed")
     
     return df_water.to_json(orient='records')
 
 
 
+import pandas as pd
+import great_expectations as ge
+import json
+import logging
+
+# Configuración básica de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def validate_api_data(**kwargs):
     ti = kwargs['ti']
@@ -137,14 +144,14 @@ def validate_api_data(**kwargs):
     df_api = pd.read_json(api_json, orient='records')
     api_ge = ge.from_pandas(df_api)
     
-    # 1. Verificar nombres de columnas
+    logging.info("Validating column names")
     expected_columns = [
         'nombre_municipio', 'fecha_proyecto', 'codigo_departamento', 'num_municipios',
         'departamento', 'región', 'total_financiamiento', 'duracion_proyecto_dias'
     ]
     api_ge.expect_table_columns_to_match_ordered_list(expected_columns)
     
-    # 2. Verificar tipo de datos de las columnas
+    logging.info("Validating column types")
     api_ge.expect_column_values_to_be_of_type('nombre_municipio', 'str')
     api_ge.expect_column_values_to_be_of_type('fecha_proyecto', 'datetime64[ns]')
     api_ge.expect_column_values_to_be_of_type('codigo_departamento', 'int64')
@@ -154,40 +161,28 @@ def validate_api_data(**kwargs):
     api_ge.expect_column_values_to_be_of_type('total_financiamiento', 'float64')
     api_ge.expect_column_values_to_be_of_type('duracion_proyecto_dias', 'int64')
     
-    # 3. Verificar normalización de nombres de lugares
+    logging.info("Validating place name normalization")
     api_ge.expect_column_values_to_match_regex('departamento', r'^[A-Z ]+$')
     api_ge.expect_column_values_to_match_regex('nombre_municipio', r'^[A-Z][a-z]+(?: [A-Z][a-z]+)*$')
     
- 
-    # 4. Verificar rangos de valores numéricos
+    logging.info("Validating numerical ranges")
     api_ge.expect_column_values_to_be_between('total_financiamiento', 0, 1e9)  # Ajusta según los valores esperados
     api_ge.expect_column_values_to_be_between('duracion_proyecto_dias', 0, 1e4)  # Ajusta según los valores esperados
     
-    # 5. Verificar transformaciones específicas
-    # Remove parentheses validation
+    logging.info("Remove parentheses validation")
     api_ge.expect_column_values_to_not_match_regex('nombre_municipio', r"\(.*?\)")
     
-    # 6. Space and capitalize validation
+    logging.info("Space and capitalize validation")
     api_ge.expect_column_values_to_match_regex('nombre_municipio', r'^[A-Z][a-z]+(?: [A-Z][a-z]+)*$')
     
     results = api_ge.validate()
-    print(results)
+    logging.info(f"Validation results: {results}")
     
     if not results['success']:
+        logging.error("API data validation failed")
         raise ValueError("API data validation failed")
     
     return df_api.to_json(orient='records')
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -204,35 +199,13 @@ def merge_task(**kwargs):
     water_cleaned_df = pd.read_json(water_json, orient='records')
     api_done_df = pd.read_json(api_json, orient='records')
     
-    # logging.info("Asegurando que las columnas son de tipo string.")
-    # # Asegurar que las columnas son de tipo string
-    # water_cleaned_df['nombre_departamento'] = water_cleaned_df['nombre_departamento'].astype(str)
-    # water_cleaned_df['nombre_municipio'] = water_cleaned_df['nombre_municipio'].astype(str)
-    # api_done_df['departamento'] = api_done_df['departamento'].astype(str)
-    # api_done_df['nombre_municipio'] = api_done_df['nombre_municipio'].astype(str)
-    
-    # logging.info("Creando claves únicas para el merge.")
-    # # Crear una clave única para el merge en ambos datasets
-    # water_cleaned_df['clave'] = water_cleaned_df['nombre_departamento'].str.lower().str.strip() + "_" + water_cleaned_df['nombre_municipio'].str.lower().str.strip()
-    # api_done_df['clave'] = api_done_df['departamento'].str.lower().str.strip() + "_" + api_done_df['municipio'].str.lower().str.strip()
-
-    # # Loggear algunas claves únicas para verificar
-    # logging.info(f"Claves únicas en water_cleaned_df:\n{water_cleaned_df['clave'].unique()[:10]}")
-    # logging.info(f"Claves únicas en api_done_df:\n{api_done_df['clave'].unique()[:10]}")
-
-    logging.info("Realizando el merge de los datasets.")
-    # Realizar el merge
-    merged_df = pd.merge(water_cleaned_df, api_done_df, on='clave', how='inner')
-    
-    # # Loggear el número de filas y columnas del DataFrame combinado
-    # num_filas, num_columnas = merged_df.shape
-    # logging.info(f"El DataFrame combinado tiene {num_filas} filas y {num_columnas} columnas.")
-    
-    # # Loggear las primeras filas del DataFrame combinado
-    # logging.info(f"Primeras filas del DataFrame combinado:\n{merged_df.head()}")
+    logging.info("Ejecutando la función de merge.")
+    # Ejecutar la función de merge
+    merged_json = merge_datasets(api_done_df, water_cleaned_df)
     
     logging.info("Merge completado y datos convertidos a JSON.")
-    return merged_df.to_json(orient='records')
+    return merged_json
+
 
 
 
@@ -241,31 +214,10 @@ def merge_task(**kwargs):
   
   
 
-def validate_api_data():
-    return .to_json(orient='records')
 
 
 
 
-# def merge_task(**kwargs):
-#     ti = kwargs['ti']
-    
-#     logging.info("Recuperando los datos transformados de agua y API desde XCom.")
-#     # Recuperar los datos transformados de agua y API desde XCom
-#     water_json = ti.xcom_pull(task_ids='transform_water')
-#     api_json = ti.xcom_pull(task_ids='transform_api')
-    
-#     logging.info("Convirtiendo los datos de JSON a DataFrame.")
-#     water_cleaned_df = pd.read_json(water_json, orient='records')
-#     api_done_df = pd.read_json(api_json, orient='records')
-    
-    
-#     logging.info("Ejecutando la función de merge.")
-#     # Ejecutar la función de merge
-#     merged_json = merge_datasets(api_done_df, water_cleaned_df)
-    
-#     logging.info("Merge completado y datos convertidos a JSON.")
-#     return merged_json
 
 
 
