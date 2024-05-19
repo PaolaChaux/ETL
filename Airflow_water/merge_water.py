@@ -18,30 +18,28 @@ def merge_datasets(api_done_df, water_cleaned_df):
         if 'nombremunicipio' in water_cleaned_df.columns:
             water_cleaned_df = water_cleaned_df.rename(columns={'nombremunicipio': 'nombre_municipio'})
             logging.info("Renombrada la columna 'nombremunicipio' a 'nombre_municipio' en water_cleaned_df.")
-        if 'año' not in water_cleaned_df.columns:
-            if 'fecha' in water_cleaned_df.columns:
-                water_cleaned_df = water_cleaned_df.rename(columns={'fecha': 'año'})
-                logging.info("Renombrada la columna 'fecha' a 'año' en water_cleaned_df.")
-            else:
-                logging.error("La columna de fecha 'año' no existe en water_cleaned_df.")
-                raise KeyError("La columna de fecha 'año' no existe en water_cleaned_df.")
         
+        # # Asegurarse de que la columna 'Año' exista y esté en formato datetime
+        # if 'año' in water_cleaned_df.columns:
+        #     water_cleaned_df['año'] = pd.to_datetime(water_cleaned_df['año'], errors='coerce')
+        #     logging.info("Convertida la columna 'año' a formato datetime en water_cleaned_df.")
+        # else:
+        #     logging.error("La columna 'año' no existe en water_cleaned_df.")
+        #     raise KeyError("La columna 'año' no existe en water_cleaned_df.")
+
         logging.info("Revisando los datos antes del filtrado.")
         logging.info("Datos en api_done_df antes del filtrado:\n%s", api_done_df.head().to_string())
         logging.info("Datos en water_cleaned_df antes del filtrado:\n%s", water_cleaned_df.head().to_string())
         
-        logging.info("Iniciando el filtrado del dataset de proyectos para incluir solo los años 2018 y 2019.")
-        # Filtrar el dataset de proyectos para incluir solo los años 2018 y 2019
+        logging.info("Iniciando el filtrado de los datasets para incluir solo los años 2018 y 2019.")
+        # Filtrar ambos datasets para incluir solo los años 2018 y 2019
         api_done_filtered_df = api_done_df[api_done_df['fecha_proyecto'].dt.year.isin([2018, 2019])]
         logging.info(f"Filtrado del dataset de proyectos completado. Total de filas: {api_done_filtered_df.shape[0]}")
         
-        logging.info("Datos en api_done_filtered_df después del filtrado:\n%s", api_done_filtered_df.head().to_string())
-        
-        logging.info("Iniciando el filtrado del dataset de calidad del agua para incluir solo las fechas de medición a partir de 2018.")
-        # Filtrar el dataset de calidad del agua para incluir solo las fechas de medición a partir de 2018
-        water_cleaned_filtered_df = water_cleaned_df[water_cleaned_df['año'].dt.year >= 2018]
+        water_cleaned_filtered_df = water_cleaned_df[water_cleaned_df['año'].dt.year.isin([2018, 2019])]
         logging.info(f"Filtrado del dataset de calidad del agua completado. Total de filas: {water_cleaned_filtered_df.shape[0]}")
         
+        logging.info("Datos en api_done_filtered_df después del filtrado:\n%s", api_done_filtered_df.head().to_string())
         logging.info("Datos en water_cleaned_filtered_df después del filtrado:\n%s", water_cleaned_filtered_df.head().to_string())
         
         # Eliminar columnas duplicadas
@@ -82,15 +80,10 @@ def merge_datasets(api_done_df, water_cleaned_df):
         }, inplace=True)
         logging.info("Entradas faltantes llenadas.")
         
-        # logging.info("Guardando el DataFrame resultante en un archivo CSV.")
-        # # Guardar el DataFrame resultante en un archivo CSV
-        # merged_df.to_csv('merged_water.csv', index=False)
-        # logging.info("Archivo CSV guardado exitosamente.")
-        
         # Resultados
         logging.info(f"Municipios con proyectos: {merged_df[merged_df['nombre_proyecto'] != 'Ausencia de proyecto']['nombre_municipio'].nunique()}")
         logging.info(f"Número total de filas en el DataFrame resultante: {merged_df.shape[0]}")
-        logging.info(f"Años disponibles en el DataFrame resultante: {merged_df['año'].dt.year.unique()}")
+        logging.info(f"Años disponibles en el DataFrame resultante: {merged_df['Año'].dt.year.unique()}")
         
         # Devolver el DataFrame mergeado como JSON
         return merged_df.to_json(orient='records')
