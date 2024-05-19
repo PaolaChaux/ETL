@@ -11,15 +11,34 @@ from merge_water import merge_datasets
 
 
 
+# def read_water():
+#     with open('./dag_water/db_config.json') as file:
+#         db_config = json.load(file)
+
+#     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
+    
+#     water = pd.read_sql('SELECT * FROM water_table LIMIT 100000', con=engine)
+    
+#     return water.to_json(orient='records')
+
+
 def read_water():
     with open('./dag_water/db_config.json') as file:
         db_config = json.load(file)
 
     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
     
-    water = pd.read_sql('SELECT * FROM water_table LIMIT 100000', con=engine)
+    # Usar el nombre correcto de la columna de fecha
+    query = '''
+    SELECT *
+    FROM water_table
+    WHERE EXTRACT(YEAR FROM "Año") >= 2018
+    '''
+    
+    water = pd.read_sql(query, con=engine)
     
     return water.to_json(orient='records')
+
 
 
 def transform_water(**kwargs):
@@ -75,14 +94,25 @@ def merge_task(**kwargs):
     water_cleaned_df = pd.read_json(water_json, orient='records')
     api_done_df = pd.read_json(api_json, orient='records')
     
-    logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
-    # Asegurarse de que las fechas estén en formato datetime
+    
     try:
-        api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'])
-        water_cleaned_df['año'] = pd.to_datetime(water_cleaned_df['año'])
+        logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
+        api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'], errors='coerce')
+        water_cleaned_df['Año'] = pd.to_datetime(water_cleaned_df['Año'], errors='coerce')
+        
+        logging.info("Fechas convertidas exitosamente.")
     except Exception as e:
         logging.error("Error al convertir las columnas de fecha a formato datetime: %s", e)
         raise
+    
+    # logging.info("Asegurando que las columnas de fecha estén en formato datetime.")
+    # # Asegurarse de que las fechas estén en formato datetime
+    # try:
+    #     api_done_df['fecha_proyecto'] = pd.to_datetime(api_done_df['fecha_proyecto'])
+    #     water_cleaned_df['año'] = pd.to_datetime(water_cleaned_df['año'])
+    # except Exception as e:
+    #     logging.error("Error al convertir las columnas de fecha a formato datetime: %s", e)
+    #     raise
     
     logging.info("Fechas convertidas exitosamente. Ejecutando la función de merge.")
     # Ejecutar la función de merge

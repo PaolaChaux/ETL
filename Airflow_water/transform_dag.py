@@ -108,10 +108,7 @@ def drop_unnecessary_columns_water(water):
 
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
-    
-    
-    
-    
+
     
     # Primero, renombrar las columnas para asegurarnos de que los nombres sean consistentes
     
