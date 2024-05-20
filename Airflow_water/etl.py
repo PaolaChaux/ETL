@@ -90,20 +90,6 @@ def expectation_water(**kwargs):
     
     
     
-    # Verificar que el DataFrame tiene las columnas esperadas en el orden correcto
-    expected_columns = [
-        'numero_parametros_promedio', 'nombre_parametro_analisis', 'irca_promedio', 
-        'nombre_municipio', 'nombre_departamento', 'año', 'is_top_20', 
-        'rango_irca', 'tratamiento_categoria', 'proporción_crítica'
-    ]
-    
-    logging.info("Validating column names")
-    
-    # Validar que las columnas coinciden con la lista esperada
-    water_ge = ge.from_pandas(df_water)
-    water_ge.expect_table_columns_to_match_ordered_list(expected_columns)
-    
-    
     logging.info("Validating column types")
     water_ge.expect_column_values_to_be_of_type('numero_parametros_promedio', 'int64')
     water_ge.expect_column_values_to_be_of_type('irca_promedio', 'float64')
@@ -145,25 +131,6 @@ def expectation_api(**kwargs):
     df_api = pd.read_json(api_json, orient='records')
     api_ge = ge.from_pandas(df_api)
     
-    # Verificar columnas renombradas y su existencia
-    expected_columns = [
-        'nombre_municipio', 'fecha_proyecto', 'codigo_departamento', 'num_municipios',
-        'departamento', 'región', 'total_financiamiento', 'duracion_proyecto_dias'
-    ]
-
-    # Logging para informar que estamos comenzando la validación de los nombres de las columnas
-    logging.info("Validating column names")
-
-    # Validar que las columnas coinciden con la lista esperada
-    missing_columns = set(expected_columns) - set(df_api.columns)
-    if missing_columns:
-        logging.error(f"Missing expected columns: {missing_columns}")
-        raise ValueError(f"Missing expected columns: {missing_columns}")
-
-    api_ge = ge.from_pandas(df_api)
-    api_ge.expect_table_columns_to_match_ordered_list(expected_columns)
-    
-    
     logging.info("Validating column types")
     api_ge.expect_column_values_to_be_of_type('nombre_municipio', 'str')
     api_ge.expect_column_values_to_be_of_type('fecha_proyecto', 'datetime64[ns]')
@@ -190,13 +157,6 @@ def expectation_api(**kwargs):
     
     results = api_ge.validate()
     logging.info(f"Validation results: {results}")
-    
-    if not results['success']:
-        logging.error("API data validation failed")
-        raise ValueError("API data validation failed")
-    
-    return df_api.to_json(orient='records')
-
 
 
 

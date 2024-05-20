@@ -6,9 +6,14 @@ import re
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import logging
 
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 
-
+# Funciones de transformación
 def renombrar_columnas_water(water):
     columns_rename = {
         'NumeroParametrosPromedio': 'numero_parametros_promedio',
@@ -21,10 +26,13 @@ def renombrar_columnas_water(water):
     water = water.rename(columns=columns_rename)
     return water
 
-
-# def dates_water(water):
-#     water['año'] = pd.to_datetime(water['año'], format='%Y')
-#     return water
+def clean_year_column(water):
+    # Revisar y eliminar valores no convertibles en la columna 'año'
+    water['año'] = pd.to_numeric(water['año'], errors='coerce')  # Convertir a numérico, reemplazar errores por NaN
+    water = water.dropna(subset=['año'])  # Eliminar filas con NaN en la columna 'año'
+    water['año'] = water['año'].astype(int)  # Convertir a int
+    water['año'] = pd.to_datetime(water['año'], format='%Y')  # Convertir a datetime
+    return water
 
 
 def normalize_text_columns_water(water):
@@ -34,8 +42,8 @@ def normalize_text_columns_water(water):
     return water
 
 def standardize_place_names(water):
-    water['nombre_departamento'] = water['nombre_departamento'].str.title().str.strip()
-    water['nombre_municipio'] = water['nombre_municipio'].str.title().str.strip()
+    water['nombre_departamento'] = water['nombre_departamento'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.title().str.strip()
+    water['nombre_municipio'] = water['nombre_municipio'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.title().str.strip()
     return water
 
 def scale_columns(water):
@@ -56,38 +64,36 @@ def classify_irca(water):
             if isinstance(irca, str):
                 irca = float(irca.replace(',', '.'))
             if irca == 0:
-                return 'Sin información'
+                return 'sin información'
             elif irca < 5:
-                return 'Sin riesgo'
+                return 'sin riesgo'
             elif irca < 14:
-                return 'Riesgo bajo'
+                return 'riesgo bajo'
             elif irca < 35:
-                return 'Riesgo medio'
+                return 'riesgo medio'
             elif irca < 80:
-                return 'Riesgo alto'
+                return 'riesgo alto'
             elif irca <= 100:
-                return 'Riesgo inviable sanitariamente'
+                return 'riesgo inviable sanitariamente'
             else:
-                return 'No clasificado'
+                return 'no clasificado'
         except ValueError:
-            return 'No clasificado'
+            return 'no clasificado'
     water['rango_irca'] = water['irca_promedio'].apply(clasificar_irca)
     return water
 
 def categorize_treatment(water):
-    """Categorizar el tratamiento de muestras."""
     def categorize(row):
         if row['MuestrasTratadas'] == 0:
-            return 'Sin tratamiento'
+            return 'sin tratamiento'
         elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
-            return 'Tratamiento completo'
+            return 'tratamiento completo'
         else:
-            return 'Tratamiento parcial'
+            return 'tratamiento parcial'
     water['tratamiento_categoria'] = water.apply(categorize, axis=1)
     return water
 
 def calculate_critical_proportion(water, threshold=50):
-    """Calcular la proporción crítica de IRCA que supera un umbral especificado."""
     def proportion(row):
         if row['IrcaMaximo'] == row['IrcaMinimo']:
             return 0
@@ -100,9 +106,8 @@ def calculate_critical_proportion(water, threshold=50):
     return water
 
 def drop_unnecessary_columns_water(water):
-    """Eliminar columnas que no son necesarias para el análisis."""
     columns_to_drop = ['MuestrasTratadas', 'MuestrasEvaluadas', 'MuestrasSinTratar',
-                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio','IrcaMaximo', 'IrcaMinimo'  ]
+                       'NumeroParametrosMinimo', 'NumeroParametrosMaximo', 'ResultadoMinimo', 'ResultadoMaximo', 'ResultadoPromedio','IrcaMaximo', 'IrcaMinimo']
     return water.drop(columns=columns_to_drop)
 
 
@@ -113,8 +118,8 @@ def transformations_water(water):
     water = renombrar_columnas_water(water)
     logging.info("Renombrar columnas water successfully.")
  
-    # water = dates_water(water)
-    # logging.info("Dates converted successfully.")
+    water = clean_year_column(water)
+    logging.info("Convertir año a datetime successfully.")
 
     water = normalize_text_columns_water(water)
     logging.info("Normalize text columns water successfully.")
@@ -125,14 +130,12 @@ def transformations_water(water):
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
 
-    
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
     
     water = classify_irca(water)
     logging.info("Classified IRCA values into categories.")
  
-    
     water = categorize_treatment(water)
     logging.info("Categorized treatment data.")
 
@@ -141,11 +144,16 @@ def transformations_water(water):
     
     water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
-    print("Columnas después de drop_unnecessary_columns_water:", water.columns)
     
+    # Reordenar las columnas
+    expected_order = ["numero_parametros_promedio", "nombre_parametro_analisis", "irca_promedio", "nombre_municipio", "nombre_departamento", "año", "is_top_20", "rango_irca", "tratamiento_categoria", "proporción_crítica"]
+    water = water[expected_order]
     
     logging.info("All transformations applied successfully.")
     return water
+
+
+
 
 
 
@@ -161,36 +169,32 @@ def transformations_water(water):
 # tranformaciones API:
 
 
+def renombrar_columnas(api):
+    api = api.rename(columns={'municipio': 'nombre_municipio', 'fecha_terminacion_proyecto': 'fecha_proyecto', 'c_digo_divipola_departamento': 'codigo_departamento'})
+    return api
+
+def dates_api(api):
+    api['fecha_proyecto'] = pd.to_datetime(api['fecha_proyecto'], errors='coerce')
+    api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'], errors='coerce')
+    return api
+
 def remove_parentheses(api):
     api['nombre_municipio'] = api['nombre_municipio'].str.replace(r"\(.*?\)", "", regex=True)
     return api
 
 def separate_municipalities(api):
-    api = api.assign(municipio=api['nombre_municipio'].str.split(',')).explode('nombre_municipio')
+    api = api.assign(nombre_municipio=api['nombre_municipio'].str.split(',')).explode('nombre_municipio')
     return api
 
 def space_capitalize(api):
     api['nombre_municipio'] = api['nombre_municipio'].str.strip().str.capitalize()
     return api
 
-
-def renombrar_columnas(api):
-    api = api.rename(columns={'municipio': 'nombre_municipio', 'fecha_terminacion_proyecto': 'fecha_proyecto', 'c_digo_divipola_departamento': 'codigo_departamento'})
-    return api
-
-
-# def dates_api(api):
-#     api['fecha_proyecto'] = pd.to_datetime(api['fecha_proyecto'])
-#     api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
-#     return api
-
 def normalize_text_columns(api):
     str_cols = api.select_dtypes(include=['object']).columns
     for col in str_cols:
-        # Verificar si cada valor es una cadena antes de aplicar operaciones de cadena
         api[col] = api[col].apply(lambda x: x.lower().strip() if isinstance(x, str) else x)
     return api
-
 
 def standardize_place_names_api(api):
     api['nombre_municipio'] = api['nombre_municipio'].str.title().str.strip()
@@ -216,27 +220,19 @@ def map_regions(api):
     return api
 
 def calculate_financing(api):
-    api['total_financiamiento'] = api['aporte_nacion'] + api['contrapartida']
+    api['total_financiamiento'] = api['aporte_nacion'].astype(float) + api['contrapartida'].astype(float)
     return api
 
 def calculate_project_duration(api):
-    api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_proyecto']).dt.days
+    if api['fecha_de_corte'].dtype == 'datetime64[ns]' and api['fecha_proyecto'].dtype == 'datetime64[ns]':
+        api['duracion_proyecto_dias'] = (api['fecha_de_corte'] - api['fecha_proyecto']).dt.days
+    else:
+        logging.error("Column types are incorrect for date calculation.")
     return api
-
 
 def drop_unnecessary_columns(api):
     api.drop(['fecha_de_corte', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
     return api
-
-
-
-
-
-
-
-
-
-
 
 def transformations_api(api):
     logging.info("Starting transformations on API data.")
@@ -244,8 +240,8 @@ def transformations_api(api):
     api = renombrar_columnas(api)
     logging.info("Renombrar columna municipio successful.")
     
-    # api = dates_api(api)
-    # logging.info("Dates converted successfully.")
+    api = dates_api(api)
+    logging.info("Dates converted successfully.")
     
     api = remove_parentheses(api)
     logging.info("Elimination of parentheses within municipalities successfully.")
@@ -260,7 +256,7 @@ def transformations_api(api):
     logging.info("Text columns normalized successfully.")
     
     api = standardize_place_names_api(api)
-    logging.info(" Standardized place names API successful.")
+    logging.info("Standardized place names API successful.")
    
     api = compute_num_municipios(api)
     logging.info("Number of municipalities computed successfully.")
@@ -277,12 +273,9 @@ def transformations_api(api):
     api = drop_unnecessary_columns(api)
     logging.info("Unnecessary columns dropped successfully.")
     
-
     logging.info("All transformations applied successfully.")
     return api
-    
-    
-    
+
     
  
     
