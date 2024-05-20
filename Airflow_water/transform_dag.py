@@ -22,19 +22,20 @@ def renombrar_columnas_water(water):
     return water
 
 
-def dates_water(water):
-    water['año'] = pd.to_datetime(water['año'])
-    return water
+# def dates_water(water):
+#     water['año'] = pd.to_datetime(water['año'], format='%Y')
+#     return water
 
-def standardize_place_names(water):
-    water['nombre_departamento'] = water['nombre_departamento'].str.title().str.strip()
-    water['nombre_municipio'] = water['nombre_municipio'].str.title().str.strip()
-    return water
 
 def normalize_text_columns_water(water):
     str_cols = water.select_dtypes(include=['object']).columns
     for col in str_cols:
         water[col] = water[col].astype(str).str.lower().str.strip()
+    return water
+
+def standardize_place_names(water):
+    water['nombre_departamento'] = water['nombre_departamento'].str.title().str.strip()
+    water['nombre_municipio'] = water['nombre_municipio'].str.title().str.strip()
     return water
 
 def scale_columns(water):
@@ -109,41 +110,34 @@ def drop_unnecessary_columns_water(water):
 def transformations_water(water):
     logging.info("Starting transformations on water data.")
 
-    
-    # Primero, renombrar las columnas para asegurarnos de que los nombres sean consistentes
-    
     water = renombrar_columnas_water(water)
     logging.info("Renombrar columnas water successfully.")
-    print("Columnas después de renombrar_columnas_water:", water.columns)
-    
-       # Después, aplicar las transformaciones que dependen de los nuevos nombres
-    water = dates_water(water)
-    logging.info("Dates converted successfully.")
-    print("Columnas después de dates_water:", water.columns)
-    
+ 
+    # water = dates_water(water)
+    # logging.info("Dates converted successfully.")
+
     water = normalize_text_columns_water(water)
     logging.info("Normalize text columns water successfully.")
-    print("Columnas después de normalize_text_columns_water:", water.columns)
+    
+    water = standardize_place_names(water)
+    logging.info("Normalize text columns water successfully.")
     
     water = scale_columns(water)
     logging.info("Scaled numerical columns.")
-    print("Columnas después de scale_columns:", water.columns)
+
     
     water = filter_top_parameters(water)
     logging.info("Filtered top influential parameters.")
-    print("Columnas después de filter_top_parameters:", water.columns)
     
     water = classify_irca(water)
     logging.info("Classified IRCA values into categories.")
-    print("Columnas después de classify_irca:", water.columns)
+ 
     
     water = categorize_treatment(water)
     logging.info("Categorized treatment data.")
-    print("Columnas después de categorize_treatment:", water.columns)
-    
+
     water = calculate_critical_proportion(water)
     logging.info("Calculated critical proportion.")
-    print("Columnas después de calculate_critical_proportion:", water.columns)
     
     water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
@@ -185,10 +179,10 @@ def renombrar_columnas(api):
     return api
 
 
-def dates_api(api):
-    api['fecha_proyecto'] = pd.to_datetime(api['fecha_proyecto'])
-    api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
-    return api
+# def dates_api(api):
+#     api['fecha_proyecto'] = pd.to_datetime(api['fecha_proyecto'])
+#     api['fecha_de_corte'] = pd.to_datetime(api['fecha_de_corte'])
+#     return api
 
 def normalize_text_columns(api):
     str_cols = api.select_dtypes(include=['object']).columns
@@ -250,8 +244,8 @@ def transformations_api(api):
     api = renombrar_columnas(api)
     logging.info("Renombrar columna municipio successful.")
     
-    api = dates_api(api)
-    logging.info("Dates converted successfully.")
+    # api = dates_api(api)
+    # logging.info("Dates converted successfully.")
     
     api = remove_parentheses(api)
     logging.info("Elimination of parentheses within municipalities successfully.")
