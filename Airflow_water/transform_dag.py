@@ -2,16 +2,8 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import logging
 import re
-
-# Configuración de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import logging
-
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
 
 # Funciones de transformación
 def renombrar_columnas_water(water):
@@ -26,13 +18,25 @@ def renombrar_columnas_water(water):
     water = water.rename(columns=columns_rename)
     return water
 
+
 def clean_year_column(water):
-    # Revisar y eliminar valores no convertibles en la columna 'año'
-    water['año'] = pd.to_numeric(water['año'], errors='coerce')  # Convertir a numérico, reemplazar errores por NaN
-    water = water.dropna(subset=['año'])  # Eliminar filas con NaN en la columna 'año'
-    water['año'] = water['año'].astype(int)  # Convertir a int
-    water['año'] = pd.to_datetime(water['año'], format='%Y')  # Convertir a datetime
+    # Imprimir los valores únicos antes de la conversión
+    print("Valores únicos en la columna 'año' antes de la conversión:", water['año'].unique())
+    
+    # Detectar si los valores están en milisegundos
+    if water['año'].max() > 9999:  # Asumiendo que los años normales no superan 9999
+        water['año'] = pd.to_datetime(water['año'], unit='ms')
+    else:
+        water['año'] = pd.to_datetime(water['año'], format='%Y', errors='coerce')
+    
+    # Extraer solo el año
+    water['año'] = water['año'].dt.year
+    
+    # Imprimir los valores únicos después de la conversión
+    print("Valores únicos en la columna 'año' después de la conversión:", water['año'].unique())
+    
     return water
+
 
 
 def normalize_text_columns_water(water):
@@ -42,6 +46,7 @@ def normalize_text_columns_water(water):
     return water
 
 def standardize_place_names(water):
+    # Convertir nombres a formato título (primera letra mayúscula, las demás minúsculas)
     water['nombre_departamento'] = water['nombre_departamento'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.title().str.strip()
     water['nombre_municipio'] = water['nombre_municipio'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.title().str.strip()
     return water
@@ -64,32 +69,32 @@ def classify_irca(water):
             if isinstance(irca, str):
                 irca = float(irca.replace(',', '.'))
             if irca == 0:
-                return 'sin información'
+                return 'Sin información'
             elif irca < 5:
-                return 'sin riesgo'
+                return 'Sin riesgo'
             elif irca < 14:
-                return 'riesgo bajo'
+                return 'Riesgo bajo'
             elif irca < 35:
-                return 'riesgo medio'
+                return 'Riesgo medio'
             elif irca < 80:
-                return 'riesgo alto'
+                return 'Riesgo alto'
             elif irca <= 100:
-                return 'riesgo inviable sanitariamente'
+                return 'Riesgo inviable sanitariamente'
             else:
-                return 'no clasificado'
+                return 'No clasificado'
         except ValueError:
-            return 'no clasificado'
+            return 'No clasificado'
     water['rango_irca'] = water['irca_promedio'].apply(clasificar_irca)
     return water
 
 def categorize_treatment(water):
     def categorize(row):
         if row['MuestrasTratadas'] == 0:
-            return 'sin tratamiento'
+            return 'Sin tratamiento'
         elif row['MuestrasTratadas'] == row['MuestrasEvaluadas']:
-            return 'tratamiento completo'
+            return 'Tratamiento completo'
         else:
-            return 'tratamiento parcial'
+            return 'Tratamiento parcial'
     water['tratamiento_categoria'] = water.apply(categorize, axis=1)
     return water
 
@@ -145,12 +150,11 @@ def transformations_water(water):
     water = drop_unnecessary_columns_water(water)
     logging.info("Dropped unnecessary columns.")
     
-    # Reordenar las columnas
-    expected_order = ["numero_parametros_promedio", "nombre_parametro_analisis", "irca_promedio", "nombre_municipio", "nombre_departamento", "año", "is_top_20", "rango_irca", "tratamiento_categoria", "proporción_crítica"]
-    water = water[expected_order]
     
     logging.info("All transformations applied successfully.")
     return water
+
+
 
 
 

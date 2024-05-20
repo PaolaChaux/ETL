@@ -82,24 +82,23 @@ def transform_api(**kwargs):
 
 
 
+
 def expectation_water(**kwargs):
     ti = kwargs['ti']
     water_json = ti.xcom_pull(task_ids='transform_water')
     df_water = pd.read_json(water_json, orient='records')
     water_ge = ge.from_pandas(df_water)
     
-    
-    
     logging.info("Validating column types")
     water_ge.expect_column_values_to_be_of_type('numero_parametros_promedio', 'int64')
     water_ge.expect_column_values_to_be_of_type('irca_promedio', 'float64')
     water_ge.expect_column_values_to_be_of_type('nombre_municipio', 'str')
     water_ge.expect_column_values_to_be_of_type('nombre_departamento', 'str')
-    water_ge.expect_column_values_to_be_of_type('año', 'datetime64[ns]')
-    
+    water_ge.expect_column_values_to_be_of_type('año', 'int64')  # Ajustamos a 'int64' porque 'año' es un año extraído como int
+
     logging.info("Validating place name normalization")
     water_ge.expect_column_values_to_match_regex('nombre_departamento', r'^[A-Z][a-z]+(?: [A-Z][a-z]+)*$')
-    water_ge.expect_column_values_to_match_regex('nombre_municipio', r'^[a-z]+(?: [a-z]+)*$')
+    water_ge.expect_column_values_to_match_regex('nombre_municipio', r'^[A-Z][a-z]+(?: [A-Z][a-z]+)*$')
     
     logging.info("Validating categorical column values")
     water_ge.expect_column_values_to_be_in_set('rango_irca', [
