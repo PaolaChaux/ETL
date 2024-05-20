@@ -13,7 +13,7 @@ def merge_datasets(api_done_df, water_cleaned_df):
     logging.info("Creando claves únicas para el merge.")
     # Crear una clave única para el merge en ambos datasets
     water_cleaned_df['clave'] = water_cleaned_df['nombre_departamento'].str.lower().str.strip() + "_" + water_cleaned_df['nombre_municipio'].str.lower().str.strip()
-    api_done_df['clave'] = api_done_df['departamento'].str.lower().str.strip() + "_" + api_done_df['municipio'].str.lower().str.strip()
+    api_done_df['clave'] = api_done_df['departamento'].str.lower().str.strip() + "_" + api_done_df['nombre_municipio'].str.lower().str.strip()
 
     # Loggear algunas claves únicas para verificar
     logging.info(f"Claves únicas en water_cleaned_df:\n{water_cleaned_df['clave'].unique()[:10]}")
