@@ -211,7 +211,7 @@ def merge_task(**kwargs):
 #             cursor.execute("""
 #                 CREATE TABLE IF NOT EXISTS dimension_date (
 #                     "ID_Tiempo" SERIAL PRIMARY KEY,
-#                     "Año" DATE NOT NULL
+#                     "Año" INT NOT NULL
 #                 );
 #             """)
 #             cursor.execute("""
@@ -246,10 +246,6 @@ def merge_task(**kwargs):
 #                     "irca_minimo" FLOAT NOT NULL,
 #                     "irca_maximo" FLOAT NOT NULL,
 #                     "irca_promedio" FLOAT NOT NULL,
-#                     "numero_parametros_promedio" INT NOT NULL,
-#                     "porcentaje_muestras_tratadas" INT NOT NULL,
-#                     "diferencia_muestras_tratadas_sin_tratar" INT NOT NULL,
-#                     "rango_parametros_analizados" INT NOT NULL
 #                 );
 #             """)
 
