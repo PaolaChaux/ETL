@@ -234,6 +234,10 @@ def calculate_project_duration(api):
         logging.error("Column types are incorrect for date calculation.")
     return api
 
+def extract_year(api):
+    api['año_proyecto'] = api['fecha_proyecto'].dt.year
+    return api
+
 def drop_unnecessary_columns(api):
     api.drop(['fecha_de_corte', 'contrapartida', 'aporte_nacion'], axis=1, inplace=True)
     return api
@@ -273,6 +277,9 @@ def transformations_api(api):
     
     api = calculate_project_duration(api)
     logging.info("Project duration calculated successfully.")
+    
+    api = extract_year(api)
+    logging.info("Year extracted from 'fecha_proyecto' successfully.")
     
     api = drop_unnecessary_columns(api)
     logging.info("Unnecessary columns dropped successfully.")
