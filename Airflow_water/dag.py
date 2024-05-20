@@ -18,10 +18,10 @@ default_args = {
 
 
 with DAG(
-    'proyect_dag',
+    'Proyect_Water',
     default_args=default_args,
-    description='Our first DAG with ETL process!',
-    schedule_interval='@daily',  # Set the schedule interval as per your requirements
+    description='Our dag_water',
+    schedule_interval='@daily',  
 ) as dag:
 
 
@@ -54,15 +54,15 @@ with DAG(
     )
     
     
-    expectations_water = PythonOperator(
-        task_id='validate_water_data',
-        python_callable=etl.validate_water_data,
+    validate_water  = PythonOperator(
+        task_id='expectation_water',
+        python_callable=etl.expectation_water,
         provide_context=True,
     )
     
-    expectations_api = PythonOperator(
-        task_id='validate_api_data',
-        python_callable=etl.validate_api_data,
+    validate_api = PythonOperator(
+        task_id='expectation_api',
+        python_callable=etl.expectation_api,
         provide_context=True,
     )
 
@@ -72,9 +72,9 @@ with DAG(
         provide_context=True,
     )
     
-    read_water >> transform_water >> expectations_water
-    read_api >> transform_api >> expectations_api
-    [expectations_water, expectations_water] >> merge_task
+    read_water >> transform_water >> validate_water 
+    read_api >> transform_api >> validate_api
+    [validate_water , validate_api] >> merge_task
 
 
    

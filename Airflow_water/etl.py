@@ -82,7 +82,7 @@ def transform_api(**kwargs):
 
 
 
-def validate_water_data(**kwargs):
+def expectation_water(**kwargs):
     ti = kwargs['ti']
     water_json = ti.xcom_pull(task_ids='transform_water')
     df_water = pd.read_json(water_json, orient='records')
@@ -130,15 +130,8 @@ def validate_water_data(**kwargs):
 
 
 
-import pandas as pd
-import great_expectations as ge
-import json
-import logging
 
-# Configuración básica de logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def validate_api_data(**kwargs):
+def expectation_api(**kwargs):
     ti = kwargs['ti']
     api_json = ti.xcom_pull(task_ids='transform_api')
     df_api = pd.read_json(api_json, orient='records')
