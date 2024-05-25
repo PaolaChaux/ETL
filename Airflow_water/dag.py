@@ -38,6 +38,13 @@ with DAG(
         python_callable=etl.transform_api,
         provide_context=True,
     )
+    
+    
+    validate_api = PythonOperator(
+        task_id='expectation_api',
+        python_callable=etl.expectation_api,
+        provide_context=True,
+    )    
 
 
     read_water = PythonOperator(
@@ -60,11 +67,7 @@ with DAG(
         provide_context=True,
     )
     
-    validate_api = PythonOperator(
-        task_id='expectation_api',
-        python_callable=etl.expectation_api,
-        provide_context=True,
-    )
+
 
     merge_task = PythonOperator(
         task_id='merge',
@@ -72,16 +75,20 @@ with DAG(
         provide_context=True,
     )
     
+    
+    load_task = PythonOperator(
+        task_id='load_task',
+        python_callable=etl.load,
+        provide_context=True,
+    )
+    
+    
+    
     read_water >> transform_water >> validate_water 
     read_api >> transform_api >> validate_api
-    [validate_water , validate_api] >> merge_task
+    [validate_water , validate_api] >> merge_task >> load_task
 
 
    
 
-    # load_task = PythonOperator(
-    #     task_id='load_task',
-    #     python_callable=etl.load,
-    #     provide_context=True,
-    # )
-    #  >> load_task
+  

@@ -24,24 +24,6 @@ def read_water():
     return water.to_json(orient='records')
 
 
-# def read_water():
-#     with open('./dag_water/db_config.json') as file:
-#         db_config = json.load(file)
-
-#     engine = create_engine(f'postgresql+psycopg2://{db_config["user"]}:{db_config["password"]}@{db_config["host"]}:5433/{db_config["dbname"]}')
-    
-#     # Usar el nombre correcto de la columna de fecha
-#     query = '''
-#     SELECT *
-#     FROM water_table
-#     WHERE EXTRACT(YEAR FROM "Año") >= 2018
-#     '''
-    
-#     water = pd.read_sql(query, con=engine)
-    
-#     return water.to_json(orient='records')
-
-
 
 def transform_water(**kwargs):
     ti = kwargs['ti']
@@ -185,6 +167,154 @@ def merge_task(**kwargs):
   
   
   
+def load(**kwargs):
+    csv_path = '/root/airflow_water12/dag_water/merged_data.csv'
+    db_config_path = '/root/airflow_water12/dag_water/db_config.json'
+
+    logging.info("Leyendo datos")
+
+    df_water = pd.read_csv(csv_path)
+    df_water.fillna(value=pd.NA, inplace=True)  # Normalizar NaN a NA para compatibilidad con la base de datos
+    df_water['fecha_proyecto'] = df_water['fecha_proyecto'].apply(lambda x: '1970-01-01' if x == -1.0 else pd.to_datetime(x, errors='coerce').date())
+
+    try:
+        with open(db_config_path, 'r') as config_json:
+            db_config = json.load(config_json)
+            conx = psycopg2.connect(**db_config)
+            cursor = conx.cursor()
+
+            # Mostrar la base de datos y la ubicación
+            logging.info(f"Conectado a la base de datos: {db_config['dbname']} en {db_config['host']}")
+
+            cursor.execute("DROP TABLE IF EXISTS Fact_WaterQuality CASCADE;")
+            cursor.execute("DROP TABLE IF EXISTS dimension_proyecto CASCADE;")
+            cursor.execute("DROP TABLE IF EXISTS dimension_tratamiento CASCADE;")
+            cursor.execute("DROP TABLE IF EXISTS dimension_parameters CASCADE;")
+            cursor.execute("DROP TABLE IF EXISTS dimension_ubication CASCADE;")
+            cursor.execute("DROP TABLE IF EXISTS dimension_date CASCADE;")
+
+            # Creación de tablas de dimensiones y tabla de hechos con restricciones únicas
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dimension_date (
+                    "ID_Tiempo" SERIAL PRIMARY KEY,
+                    "Año" INT NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dimension_ubication (
+                    "ID_Ubicacion" SERIAL PRIMARY KEY,
+                    "nombre_departamento" VARCHAR(255) NOT NULL,
+                    "div_dpto" INT NOT NULL,
+                    "nombre_municipio_x" VARCHAR(255) NOT NULL,
+                    "divi_muni" INT NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dimension_parameters (
+                    "ID_Parametro" SERIAL PRIMARY KEY,
+                    "nombre_parametro_analisis" VARCHAR(255) NOT NULL,
+                    "numero_parametros_promedio" INT NOT NULL,
+                    "is_top_20" BOOLEAN NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dimension_tratamiento (
+                    "ID_Rango" SERIAL PRIMARY KEY,
+                    "rango_irca" VARCHAR(255) NOT NULL,
+                    "tratamiento_categoría" VARCHAR(255) NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS dimension_proyecto (
+                    "ID_Proyecto" SERIAL PRIMARY KEY,
+                    "indicador" VARCHAR(255) NOT NULL,
+                    "nombre_proyecto" VARCHAR(255) NOT NULL,
+                    "origen" VARCHAR(255) NOT NULL,
+                    "estado_seguimiento" VARCHAR(255) NOT NULL,
+                    "num_municipios" INT NOT NULL,
+                    "region" VARCHAR(255) NOT NULL,
+                    "total_financiamiento" FLOAT NOT NULL,
+                    "duracion_proyecto_dias" INT NOT NULL,
+                    "ano_proyecto" INT NOT NULL,
+                    "fecha_proyecto" DATE NOT NULL,
+                    "clave" VARCHAR(255) NOT NULL,
+                    "codigo_departamento" VARCHAR(255) NOT NULL,
+                    "c_digo_divipola_municipio" VARCHAR(255) NOT NULL,
+                    "nombre_municipio_y" VARCHAR(255) NOT NULL
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Fact_WaterQuality (
+                    "ID_Medicion" SERIAL PRIMARY KEY,
+                    "ID_Tiempo" INT NOT NULL REFERENCES dimension_date("ID_Tiempo"),
+                    "ID_Ubicacion" INT NOT NULL REFERENCES dimension_ubication("ID_Ubicacion"),
+                    "ID_Parametro" INT NOT NULL REFERENCES dimension_parameters("ID_Parametro"),
+                    "ID_Rango" INT NOT NULL REFERENCES dimension_tratamiento("ID_Rango"),
+                    "ID_Proyecto" INT NOT NULL REFERENCES dimension_proyecto("ID_Proyecto"),
+                    "irca_promedio" FLOAT NOT NULL,
+                    "proporcion_critica" FLOAT NOT NULL
+                );
+            """)
+            conx.commit()
+            logging.info("Tablas creadas exitosamente.")
+
+            for year in df_water['año']:
+                cursor.execute("""
+                    INSERT INTO dimension_date ("Año") VALUES (%s) RETURNING "ID_Tiempo";
+                """, (year,))
+                id_tiempo = cursor.fetchone()[0]
+                logging.info(f"Insertado año {year} con ID {id_tiempo}")
+
+            for _, row in df_water.iterrows():
+                cursor.execute("""
+                    INSERT INTO dimension_ubication ("nombre_departamento", "div_dpto", "nombre_municipio_x", "divi_muni")
+                    VALUES (%s, %s, %s, %s) RETURNING "ID_Ubicacion";
+                """, (row['nombre_departamento'], row['Div_dpto'], row['nombre_municipio_x'], row['Divi_muni']))
+                id_ubicacion = cursor.fetchone()[0]
+                logging.info(f"Insertado ubicación con ID {id_ubicacion}")
+
+                cursor.execute("""
+                    INSERT INTO dimension_parameters ("nombre_parametro_analisis", "numero_parametros_promedio", "is_top_20")
+                    VALUES (%s, %s, %s) RETURNING "ID_Parametro";
+                """, (row['nombre_parametro_analisis'], row['numero_parametros_promedio'], row['is_top_20']))
+                id_parametro = cursor.fetchone()[0]
+                logging.info(f"Insertado parámetro con ID {id_parametro}")
+
+                cursor.execute("""
+                    INSERT INTO dimension_tratamiento ("rango_irca", "tratamiento_categoría")
+                    VALUES (%s, %s) RETURNING "ID_Rango";
+                """, (row['rango_irca'], row['tratamiento_categoria']))
+                id_rango = cursor.fetchone()[0]
+                logging.info(f"Insertado tratamiento con ID {id_rango}")
+
+                cursor.execute("""
+                    INSERT INTO dimension_proyecto ("indicador", "nombre_proyecto", "origen", "estado_seguimiento", "num_municipios", "region", "total_financiamiento", "duracion_proyecto_dias", "ano_proyecto", "fecha_proyecto", "clave", "codigo_departamento", "c_digo_divipola_municipio", "nombre_municipio_y")
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING "ID_Proyecto";
+                """, (row['indicador'], row['nombre_proyecto'], row['origen'], row['estado_seguimiento'], row['num_municipios'], row['región'], row['total_financiamiento'], row['duracion_proyecto_dias'], row['año_proyecto'], row['fecha_proyecto'], row['clave'], row['codigo_departamento'], row['c_digo_divipola_municipio'], row['nombre_municipio_y']))
+                id_proyecto = cursor.fetchone()[0]
+                logging.info(f"Insertado proyecto con ID {id_proyecto}")
+
+                cursor.execute("""
+                    INSERT INTO Fact_WaterQuality ("ID_Tiempo", "ID_Ubicacion", "ID_Parametro", "ID_Rango", "ID_Proyecto", "irca_promedio", "proporcion_critica")
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                """, (id_tiempo, id_ubicacion, id_parametro, id_rango, id_proyecto, row['irca_promedio'], row['proporción_crítica']))
+                logging.info(f"Insertado medición con ID_Tiempo {id_tiempo}, ID_Ubicacion {id_ubicacion}, ID_Parametro {id_parametro}, ID_Rango {id_rango}, ID_Proyecto {id_proyecto}")
+
+            conx.commit()
+            logging.info("Los datos se han cargado exitosamente a la base de datos.")
+            logging.info(f"Primeras filas del DataFrame cargado:\n{df_water.head()}")
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        if 'conx' in locals() and conx:
+            conx.rollback()
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conx' in locals() and conx:
+            conx.close()
+
+    return "Data loaded successfully"
 
 
 
@@ -196,76 +326,5 @@ def merge_task(**kwargs):
 
 
 
-# def load(**kwargs):
-#     ti = kwargs['ti']
-#     json_data = json.loads(ti.xcom_pull(task_ids="merge_task"))
-#     logging.info(f"Data coming from extract: {json_data}")
-    
-#     df_water = pd.json_normalize(json_data)
-#     df_water.fillna(value=pd.NA, inplace=True)  # Normalizar NaN a NA para compatibilidad con la base de datos
 
-#     try:
-#         with open('db_config.json', 'r') as config_json, psycopg2.connect(**json.load(config_json)) as conx:
-#             cursor = conx.cursor()
-#             # Creación de tablas de dimensiones y tabla de hechos
-#             cursor.execute("""
-#                 CREATE TABLE IF NOT EXISTS dimension_date (
-#                     "ID_Tiempo" SERIAL PRIMARY KEY,
-#                     "Año" INT NOT NULL
-#                 );
-#             """)
-#             cursor.execute("""
-#                 CREATE TABLE IF NOT EXISTS dimension_ubication (
-#                     "ID_Ubicacion" SERIAL PRIMARY KEY,
-#                     "nombre_departamento" VARCHAR(255) NOT NULL,
-#                     "div_dpto" INT NOT NULL,
-#                     "nombre_municipio" VARCHAR(255) NOT NULL,
-#                     "divi_muni" INT NOT NULL
-#                 );
-#             """)
-#             cursor.execute("""
-#                 CREATE TABLE IF NOT EXISTS dimension_parameters (
-#                     "ID_Parametro" SERIAL PRIMARY KEY,
-#                     "nombre_parametro_analisis" VARCHAR(255) NOT NULL
-#                 );
-#             """)
-#             cursor.execute("""
-#                 CREATE TABLE IF NOT EXISTS dimension_tratamiento (
-#                     "ID_Rango" SERIAL PRIMARY KEY,
-#                     "rango_irca" VARCHAR(255) NOT NULL,
-#                     "tratamiento_categoría" VARCHAR(255) NOT NULL
-#                 );
-#             """)
-#             cursor.execute("""
-#                 CREATE TABLE IF NOT EXISTS Fact_WaterQuality (
-#                     "ID_Medicion" SERIAL PRIMARY KEY,
-#                     "ID_Tiempo" INT NOT NULL REFERENCES dimension_date("ID_Tiempo"),
-#                     "ID_Ubicacion" INT NOT NULL REFERENCES dimension_ubication("ID_Ubicacion"),
-#                     "ID_Parametro" INT NOT NULL REFERENCES dimension_parameters("ID_Parametro"),
-#                     "ID_Rango" INT NOT NULL REFERENCES dimension_tratamiento("ID_Rango"),
-#                     "irca_minimo" FLOAT NOT NULL,
-#                     "irca_maximo" FLOAT NOT NULL,
-#                     "irca_promedio" FLOAT NOT NULL,
-#                 );
-#             """)
-
-#             for year in df_water['Año'].drop_duplicates():
-#                 cursor.execute("""
-#                     INSERT INTO dimension_date ("Año") VALUES (%s) ON CONFLICT ("Año") DO NOTHING RETURNING "ID_Tiempo";
-#                 """, (year,))
-#                 id_tiempo = cursor.fetchone()[0] if cursor.rowcount != 0 else None
-            
-#             conx.commit()
-#             logging.info("Data has been successfully loaded to the database.")
-
-#     except Exception as e:
-#         logging.error(f"An error occurred: {e}")
-#         if conx:
-#             conx.rollback()
-
-#     finally:
-#         if cursor:
-#             cursor.close()
-
-#     return "Data loaded successfully"
     

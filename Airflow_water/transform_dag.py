@@ -235,7 +235,7 @@ def calculate_project_duration(api):
     return api
 
 def extract_year(api):
-    api['año_proyecto'] = api['fecha_proyecto'].dt.year
+    api['anio_proyecto'] = api['fecha_proyecto'].dt.year
     return api
 
 def drop_unnecessary_columns(api):
