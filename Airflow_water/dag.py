@@ -82,11 +82,16 @@ with DAG(
         provide_context=True,
     )
     
-    
+    kafka_stream_task = PythonOperator(
+    task_id= 'stream_data',
+    python_callable = etl.stream_data,
+    provide_context = True
+    )
+
     
     read_water >> transform_water >> validate_water 
     read_api >> transform_api >> validate_api
-    [validate_water , validate_api] >> merge_task >> load_task
+    [validate_water , validate_api] >> merge_task >> load_task >> kafka_stream_task
 
 
    

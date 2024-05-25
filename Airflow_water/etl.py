@@ -3,6 +3,8 @@ import sqlalchemy
 import json
 import logging
 from sqlalchemy import create_engine
+from time import sleep
+from confluent_kafka import Producer
 import psycopg2
 from sodapy import Socrata
 import great_expectations as ge
@@ -316,6 +318,55 @@ def load(**kwargs):
 
     return "Data loaded successfully"
 
+
+
+
+
+
+def consultar_datos(filename, db_name, table_name):
+    try:
+        with open(filename, 'r') as file:
+            config = json.load(file)
+
+        connection = psycopg2.connect(
+            host=config["host"],
+            user=config["user"],
+            password=config["password"],
+            dbname=db_name,
+            port=config.get("port", 3033)
+        )
+
+        query = f"SELECT * FROM {table_name} LIMIT 100"
+        data = pd.read_sql(query, connection)
+
+        return data
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(f"Error al consultar datos: {error}")
+        return None
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+def stream_data():
+    filename = '/root/airflow_water12/dag_water/db_config.json'
+    db_name = 'water'
+    table_name = 'dimension_tratamiento'
+    df = consultar_datos(filename, db_name, table_name)
+    kafka_bootstrap_servers = ['localhost:9092']
+
+    producer = Producer({
+        'bootstrap.servers': ','.join(kafka_bootstrap_servers)
+    })
+
+    for i in range(len(df)):
+        row_json = df.iloc[i].to_json()
+        producer.produce("kafka-water", value=row_json)
+        print(f"new message sent: {row_json}")
+        sleep(1)
+
+    producer.flush()
+
+    print("Fin del envio")
 
 
 
