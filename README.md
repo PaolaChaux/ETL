@@ -1,5 +1,6 @@
 # ETL
-<h1 align="center"> Water Quality  </h1>
+<h1 align="center"> Water Quality Analysis Project
+ </h1>
 <p align="left">
    <img src="https://img.shields.io/badge/STATUS-FINISHED-green">
    </p>
@@ -15,6 +16,9 @@
 ### 6. Features
 ### 7. Installation Steps
 ### 8. Considerations
+
+## Important:
+This work was done using wsl2 since many problems were obtained working with only Docker, the only thing that changes is that the files contained here were run in a wsl2 console, with ubuntu, they are the same files.
 
 ## 1. Description Proyect Water Quality
  This project focuses on analyzing the Water Quality Index of Colombia (IRCA) data to provide insights into the state of water quality across various regions in the country. The analysis involves extracting, transforming, and loading (ETL) processes to clean and structure the data for further examination.
@@ -109,6 +113,34 @@ Data-Driven Decision Making: Our project facilitates data-driven decision-making
 #### 5. Install the required tools and modules in the environment.
 #### 6.Set the created environment as kernel.
 ### 3. Run the app and enjoy it.
+
+## Important Note:
+if you want to do it with wsl2, you only have to download it, open ubuntu, create a folder where you are going to have your files
+
+Inside your folder you must have the same structure and functions as in this repository.
+
+To run it in wsl you must follow these steps:
+1. Enter your folder and create a virtual environment in it.
+2. Install all the tools that are in Requeriments.txt
+3. You will be prompted to create a user with a password.
+4. Then, enter as root or user with privilege in ubuntu with "sudo -i", it will ask you for the password, you will go to where you saved the folder, already there:
+5.  Activate your virtual environment: "source environment_name/bin/activate".
+6. Click on the command "export AIRFLOW_HOME=$$(pwd)
+7. give the command "airflow scheduler", let it run for only 5 seconds and stop it, with contrl c you can do it.
+8. Go to the folder where you have the container, and give the command "docker compose up -d".
+9. In the work folder after the scheduler, send this command "airflow standalone".
+
+With this it should run with wsl, you should see the page running with all the tasks.
+
+## Conclusions
+
+El desarrollo de este proyecto ETL nos permitió aplicar de manera práctica los conocimientos teóricos adquiridos durante el curso. La implementación de técnicas de extracción, transformación y carga de datos en un entorno real nos brindó una comprensión más profunda y tangible de estos conceptos, facilitando nuestro aprendizaje.
+
+A lo largo del proyecto, mejoramos nuestras habilidades en lenguajes de programación como Python y en el uso de bibliotecas y herramientas relevantes, como Pandas, SQLAlchemy, Great Expectations y Airflow. Estas habilidades son esenciales para nuestra futura carrera profesional en el campo de la ingeniería de datos y la inteligencia artificial.
+
+La planificación y ejecución del proyecto ETL nos proporcionó una valiosa experiencia en la gestión de proyectos. Aprendimos a coordinar diferentes etapas del flujo de trabajo, desde la extracción y transformación de datos hasta su validación y carga, asegurando que cada paso se completará de manera eficiente y sin errores.
+
+
 
 ## 8. Considerations
 To establish the connection to the database in postgres, it´s necessary to have a file named "db_config.json" that contain your database credentials in json format for more security and for ease, this file should include: "localhost" of the server address, "user", you username, "password", the password of you postgres and "database" for the specific database that you want to access.
